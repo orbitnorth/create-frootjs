@@ -117,7 +117,7 @@ function printUsage(): void {
                              • streaming    SSE & token streaming
                              • websocket    Real-time pub/sub rooms
                              • openapi      REST API & Scalar docs
-                             • fullstack    Server-rendered JSX views
+                             • fullstack    Next.js alternative (Preact SSR & layouts)
                              • minimal      Lean single-file starter
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
     --db <orm>               Database ORM: none | drizzle | prisma

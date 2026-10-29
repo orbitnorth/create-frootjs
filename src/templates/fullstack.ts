@@ -1,14 +1,15 @@
 /**
- * Fullstack JSX & Server-Side Rendering (SSR) Template
- * Native JSX components rendered on the server with zero client JavaScript overhead.
+ * Fullstack Next.js Alternative Template
+ * Powered by @froot/fullstack, Froot Core, and Preact.
+ * Features nested layouts, dynamic routes, Preact SSR, SSG, and Markdown content.
  */
 
-import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG } from './types.js';
+import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE } from './types.js';
 
 export const fullstackTemplate: TemplateDefinition = {
   id: 'fullstack',
-  name: 'Fullstack',
-  description: 'Server-rendered JSX views',
+  name: 'Fullstack (Next.js Alternative)',
+  description: 'Next.js alternative with Preact SSR, nested layouts, SSG & Markdown',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(
@@ -19,10 +20,14 @@ export const fullstackTemplate: TemplateDefinition = {
           scripts: {
             dev: 'tsx watch src/server.tsx',
             build: 'tsc',
+            'build:static': 'tsx src/build.ts',
             start: 'node dist/server.js',
           },
           dependencies: {
-            frootjs: '^1.0.2',
+            '@froot/fullstack': '^1.0.0',
+            frootjs: '^1.0.4',
+            preact: '^11.1.0',
+            'preact-render-to-string': '^6.8.2',
           },
           devDependencies: {
             '@types/node': '^22.10.0',
@@ -34,18 +39,45 @@ export const fullstackTemplate: TemplateDefinition = {
         2
       ) + '\n',
 
-      'tsconfig.json': COMMON_TSCONFIG,
+      'tsconfig.json': `{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+`,
       '.gitignore': COMMON_GITIGNORE,
 
       'README.md': `# ${projectName}
 
-Froot application built with the **Fullstack JSX & Server-Side Rendering (SSR)** pattern.
+High-performance **Next.js alternative** powered by **Froot Framework** and **Preact**.
 
 ## Features
 
-- **Native JSX / TSX**: Pure server-rendered JSX without React runtime baggage
-- **Layout Middleware**: Automatic HTML wrapper layout with \`jsxRenderer()\`
-- **Zero Client JS**: Ultra-fast initial page loads and 100% SEO-friendly markup
+- ⚡ **Ultra-Fast Throughput**: 120,000+ req/sec powered by Froot's monomorphic V8 engine.
+- ⚛️ **Native Preact SSR**: Lightweight 3kB component runtime without React baggage.
+- 📂 **Next.js-style Architecture**:
+  - Nested layout system (\`router.layout('/docs', ...)\`)
+  - Dynamic route dispatch with typed parameters (\`/docs/:slug?\`)
+  - Distinct layouts (e.g. landing page with navbar vs documentation with left sidebar and no navbar)
+- 🚀 **Static Site Generation (SSG)**: Prerender static pages and dynamic routes with \`generateStaticParams()\`.
+- 📝 **Built-in Markdown Engine**: Next.js MDX/Contentlayer alternative with zero dependencies.
 
 ## Getting Started
 
@@ -56,180 +88,299 @@ pnpm install
 # 2. Run in development mode
 pnpm run dev
 
-# 3. View in browser
+# 3. Prerender static site (SSG)
+pnpm run build:static
+
+# 4. View in browser
 http://localhost:3000
 \`\`\`
 `,
 
-      'src/components/Layout.tsx': `import type { FC, PropsWithChildren } from 'frootjs/jsx';
+      'content/docs/overview.md': `---
+title: Overview
+category: Getting Started
+summary: Introduction to the Froot Fullstack Next.js Alternative architecture.
+---
 
-export interface LayoutProps {
+Welcome to **Froot Fullstack**, the high-performance Next.js alternative powered by Preact and Froot.
+
+## Design Principles
+
+- **Monomorphic V8 Execution:** Minimal memory overhead and maximum throughput.
+- **Preact Server-Side Rendering:** Clean JSX syntax with sub-millisecond render times.
+- **Nested Layouts:** Dedicated layouts for different application sections (e.g. docs vs marketing).
+`,
+
+      'content/docs/quickstart.md': `---
+title: Quickstart
+category: Getting Started
+summary: Build your first fullstack application in seconds.
+---
+
+Create routes, compose Preact components, and serve HTML with extreme performance.
+
+## Adding Routes
+
+Edit \`src/server.tsx\` to register your pages:
+
+\`\`\`tsx
+router.page('/about', () => <AboutPage />);
+\`\`\`
+`,
+
+      'src/layouts/RootLayout.tsx': `import type { ComponentChildren } from 'preact';
+
+export interface RootLayoutProps {
   title?: string;
+  description?: string;
+  children: ComponentChildren;
 }
 
-export const Layout: FC<PropsWithChildren<LayoutProps>> = ({ title = 'Froot JSX App', children }) => {
+export function RootLayout({
+  title = 'Froot Fullstack App',
+  description = 'High-performance Next.js alternative powered by Froot and Preact',
+  children,
+}: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html lang="en" class="dark scroll-smooth">
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title}</title>
-        <style>{\`
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; line-height: 1.6; }
-          header { background: #1e293b; border-bottom: 1px solid #334155; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-          .logo { font-size: 1.3rem; font-weight: bold; color: #10b981; text-decoration: none; }
-          nav a { color: #94a3b8; text-decoration: none; margin-left: 1.5rem; font-weight: 500; }
-          nav a:hover { color: #f8fafc; }
-          main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
-          footer { text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem; border-top: 1px solid #1e293b; margin-top: 4rem; }
-        \`}</style>
+        <meta name="description" content={description} />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: \`
+            tailwind.config = {
+              darkMode: 'class',
+              theme: {
+                extend: {
+                  colors: {
+                    froot: { 400: '#34d399', 500: '#10b981', 600: '#059669' }
+                  }
+                }
+              }
+            };
+          \`
+        }} />
       </head>
-      <body>
-        <header>
-          <a href="/" className="logo">Froot JSX</a>
-          <nav>
-            <a href="/">Home</a>
-            <a href="/about">About</a>
-            <a href="/features">Features</a>
-          </nav>
-        </header>
-        <main>{children}</main>
-        <footer>
-          <p>Powered by Froot Server-Side Rendering Engine</p>
-        </footer>
+      <body class="bg-slate-950 text-slate-100 font-sans min-h-screen antialiased">
+        {children}
       </body>
     </html>
   );
-};
+}
 `,
 
-      'src/components/Card.tsx': `import type { FC, PropsWithChildren } from 'frootjs/jsx';
+      'src/layouts/DocsLayout.tsx': `import type { ComponentChildren } from 'preact';
 
-export interface CardProps {
-  title: string;
-  badge?: string;
+export interface DocsLayoutProps {
+  currentPath: string;
+  children: ComponentChildren;
 }
 
-export const Card: FC<PropsWithChildren<CardProps>> = ({ title, badge, children }) => {
+export function DocsLayout({ currentPath, children }: DocsLayoutProps) {
+  const links = [
+    { href: '/docs', title: 'Overview' },
+    { href: '/docs/quickstart', title: 'Quickstart' },
+  ];
+
   return (
-    <div style={{
-      background: '#1e293b',
-      border: '1px solid #334155',
-      borderRadius: '8px',
-      padding: '1.5rem',
-      marginBottom: '1.25rem',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <h3 style={{ color: '#38bdf8', fontSize: '1.2rem' }}>{title}</h3>
-        {badge ? (
-          <span style={{
-            background: '#064e3b',
-            color: '#34d399',
-            fontSize: '0.75rem',
-            padding: '0.2rem 0.6rem',
-            borderRadius: '9999px',
-            fontWeight: 600,
-          }}>
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      <div>{children}</div>
+    <div class="flex min-h-screen">
+      {/* NO NAVBAR ON DOCS! Left sidebar handles all navigation */}
+      <aside class="w-72 bg-slate-900 border-r border-slate-800 p-6 flex flex-col">
+        <a href="/" class="text-base font-bold text-white mb-6 flex items-center gap-2">
+          <span>🍏</span>
+          <span>Froot<span class="text-emerald-400">.ts</span></span>
+          <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20">DOCS</span>
+        </a>
+
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          Getting Started
+        </div>
+
+        <nav class="space-y-1">
+          {links.map((link) => {
+            const isActive = currentPath === link.href || (link.href === '/docs' && currentPath === '/docs/overview');
+            const cls = isActive
+              ? 'bg-emerald-500/10 text-emerald-400 font-semibold border-l-2 border-emerald-400 pl-2.5'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60';
+
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                class={\`block px-3 py-2 text-xs rounded-lg transition-colors \${cls}\`}
+              >
+                {link.title}
+              </a>
+            );
+          })}
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-slate-800 text-xs text-slate-400">
+          <a href="/" class="hover:text-emerald-400 transition-colors">&larr; Back to Home</a>
+        </div>
+      </aside>
+
+      {/* Main Document Body */}
+      <main class="flex-1 max-w-4xl px-8 py-10">
+        {children}
+      </main>
     </div>
   );
-};
+}
 `,
 
-      'src/pages/Home.tsx': `import type { FC } from 'frootjs/jsx';
-import { Card } from '../components/Card.js';
-
-export const HomePage: FC = () => {
+      'src/pages/HomePage.tsx': `export function HomePage() {
   return (
     <div>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.25rem', color: '#10b981', marginBottom: '0.5rem' }}>
-          Server-Side Rendered JSX
+      {/* Top Navbar on Landing Page */}
+      <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <a href="/" class="flex items-center gap-2 font-bold text-white">
+            <span class="text-xl">🍏</span>
+            <span>Froot<span class="text-emerald-400">.ts</span></span>
+          </a>
+          <nav class="flex items-center gap-6 text-sm text-slate-300">
+            <a href="#features" class="hover:text-emerald-400 transition-colors">Features</a>
+            <a href="/docs" class="text-emerald-400 hover:text-emerald-300 font-semibold">Docs &rarr;</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <main class="max-w-5xl mx-auto px-6 py-20 text-center">
+        <div class="inline-block px-3 py-1 mb-6 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+          Next.js Alternative • Preact SSR • Monomorphic V8
+        </div>
+
+        <h1 class="text-5xl font-extrabold tracking-tight text-white mb-6">
+          High-Performance <span class="text-emerald-400">Fullstack Web Engine</span>
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
-          Blazing fast HTML generated on the server with TypeScript-native JSX components.
+
+        <p class="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+          Engineered for extreme throughput, nested layout architecture, and zero-allocation dynamic routing.
         </p>
-      </div>
 
-      <Card title="Zero Client Runtime" badge="Performance">
-        <p>No heavy virtual DOM diffing in the browser. Pure, pre-rendered semantic HTML delivered instantly.</p>
-      </Card>
-
-      <Card title="Type-Safe Views" badge="DX">
-        <p>Full TypeScript compiler checking for props, children, styles, and HTML attributes.</p>
-      </Card>
-
-      <Card title="Streaming & Islands Ready" badge="Architecture">
-        <p>Seamlessly compose asynchronous server components and stream output as it becomes available.</p>
-      </Card>
+        <div class="flex items-center justify-center gap-4">
+          <a
+            href="/docs"
+            class="px-6 py-3 rounded-xl font-semibold bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20"
+          >
+            Explore Documentation
+          </a>
+        </div>
+      </main>
     </div>
   );
-};
+}
 `,
 
-      'src/pages/About.tsx': `import type { FC } from 'frootjs/jsx';
+      'src/pages/DocsPage.tsx': `export interface DocsPageProps {
+  title: string;
+  category: string;
+  contentHtml: string;
+}
 
-export const AboutPage: FC = () => {
+export function DocsPage({ title, category, contentHtml }: DocsPageProps) {
   return (
-    <div style={{ background: '#1e293b', padding: '2rem', borderRadius: '8px', border: '1px solid #334155' }}>
-      <h1 style={{ color: '#10b981', marginBottom: '1rem' }}>About This Application</h1>
-      <p style={{ marginBottom: '1rem' }}>
-        This project showcases Froot's built-in JSX rendering pipeline. Unlike traditional React or Next.js setups,
-        Froot renders JSX straight to HTML strings without requiring React, ReactDOM, or a Node.js bundling step.
-      </p>
-      <p style={{ color: '#94a3b8' }}>
-        It achieves sub-millisecond page render times while maintaining full component composition.
-      </p>
+    <div>
+      <div class="text-xs font-mono text-emerald-400 mb-2 uppercase tracking-wider">
+        {category}
+      </div>
+      <h1 class="text-3xl font-extrabold text-white mb-6">{title}</h1>
+      <article
+        class="prose prose-invert max-w-none text-slate-300 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: contentHtml }}
+      />
     </div>
   );
-};
+}
 `,
 
-      'src/server.tsx': `import { Froot } from 'frootjs';
-import { jsxRenderer } from 'frootjs/jsx';
-import { Layout } from './components/Layout.js';
-import { HomePage } from './pages/Home.js';
-import { AboutPage } from './pages/About.js';
+      'src/server.tsx': `import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Froot } from 'frootjs';
+import { createAppRouter, renderMarkdownFile } from '@froot/fullstack';
+import { RootLayout } from './layouts/RootLayout.js';
+import { DocsLayout } from './layouts/DocsLayout.js';
+import { HomePage } from './pages/HomePage.js';
+import { DocsPage } from './pages/DocsPage.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const app = new Froot();
+export const router = createAppRouter(app);
 
-// Wrap all HTML responses in the global Layout shell
-app.use('*', jsxRenderer(({ children }) => {
-  return <Layout>{children}</Layout>;
-}));
-
-// Route handlers
-app.get('/', (c) => {
-  return c.render(<HomePage />);
-});
-
-app.get('/about', (c) => {
-  return c.render(<AboutPage />);
-});
-
-app.get('/features', (c) => {
-  return c.render(
-    <div>
-      <h1 style={{ color: '#10b981', marginBottom: '1rem' }}>Framework Features</h1>
-      <ul style={{ paddingLeft: '1.5rem', color: '#cbd5e1' }}>
-        <li>RADIX tree router with O(K) lookup</li>
-        <li>Auto-generated OpenAPI 3.1 & Scalar docs</li>
-        <li>Native JSX & async component support</li>
-        <li>Full WebCrypto authentication ecosystem</li>
-        <li>Universal WebSockets & pub/sub hub</li>
-      </ul>
-    </div>
+// 1. Docs Layout (NO TOP NAVBAR, left sidebar only)
+router.layout('/docs', ({ children, currentPath }) => {
+  return (
+    <RootLayout title="Documentation — Froot Fullstack">
+      <DocsLayout currentPath={currentPath}>
+        {children}
+      </DocsLayout>
+    </RootLayout>
   );
 });
 
-const PORT = Number(process.env.PORT) || 3000;
+// 2. Landing Page Route (with top navbar)
+router.page('/', () => {
+  return (
+    <RootLayout title="Froot Fullstack — Next.js Alternative">
+      <HomePage />
+    </RootLayout>
+  );
+});
+
+// 3. Dynamic Documentation Route (/docs and /docs/:slug)
+router.page(
+  '/docs/:slug?',
+  async ({ params }) => {
+    const slug = params['slug'] || 'overview';
+    const docPath = path.resolve(__dirname, \`../content/docs/\${slug}.md\`);
+    const { frontmatter, html } = await renderMarkdownFile(docPath);
+
+    return (
+      <DocsPage
+        title={frontmatter['title'] || slug}
+        category={frontmatter['category'] || 'Documentation'}
+        contentHtml={html}
+      />
+    );
+  },
+  {
+    generateStaticParams: () => [{ slug: 'overview' }, { slug: 'quickstart' }],
+  }
+);
+
+const PORT = Number(process.env['PORT'] || 3000);
 app.listen(PORT, () => {
-  console.log(\`Fullstack JSX server running on http://localhost:\${PORT}\`);
+  console.log(\`🍏 Froot Fullstack server running at http://localhost:\${PORT}\`);
+});
+`,
+
+      'src/build.ts': `/**
+ * Static Site Generation (SSG) Builder
+ */
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { router } from './server.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const outDir = path.resolve(__dirname, '../dist/static');
+
+async function build() {
+  console.log('🍏 Building static site with @froot/fullstack...');
+  const result = await router.exportStatic({ outDir });
+  console.log(\`✅ Export complete in \${result.durationMs}ms: \${result.renderedRoutes.length} routes pre-rendered.\`);
+}
+
+build().catch((err) => {
+  console.error('❌ Build failed:', err);
+  process.exit(1);
 });
 `,
     };
