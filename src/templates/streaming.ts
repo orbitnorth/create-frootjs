@@ -22,7 +22,7 @@ export const streamingTemplate: TemplateDefinition = {
             start: 'node dist/server.js',
           },
           dependencies: {
-            frootjs: '^1.0.2',
+            frootjs: '^1.0.5',
           },
           devDependencies: {
             '@types/node': '^22.10.0',
