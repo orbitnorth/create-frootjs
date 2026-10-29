@@ -228,3 +228,4 @@ export function applyAgentAddon(
   files['AGENT.md'] = generateAgentDoc(opts);
   files['.cursorrules'] = generateCursorRules(opts);
 }
+
