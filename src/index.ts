@@ -28,6 +28,7 @@ interface ParsedArgs {
   pkgManager?: 'pnpm' | 'npm' | 'yarn' | 'bun';
   db?: 'none' | 'drizzle' | 'prisma';
   docker?: boolean;
+  linter?: 'none' | 'biome' | 'eslint';
   git?: boolean;
   install?: boolean;
   yes?: boolean;
@@ -60,6 +61,14 @@ function parseCliArgs(argv: string[]): ParsedArgs {
       args.docker = true;
     } else if (item === '--no-docker') {
       args.docker = false;
+    } else if (item === '--biome') {
+      args.linter = 'biome';
+    } else if (item === '--eslint') {
+      args.linter = 'eslint';
+    } else if (item === '--linter') {
+      args.linter = raw[++i] as ParsedArgs['linter'];
+    } else if (item.startsWith('--linter=')) {
+      args.linter = item.split('=')[1] as ParsedArgs['linter'];
     } else if (item === '--template' || item === '-t') {
       args.template = raw[++i];
     } else if (item.startsWith('--template=')) {
@@ -97,6 +106,7 @@ function printUsage(): void {
                              • minimal      Lean single-file starter
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
     --db <orm>               Database ORM: none | drizzle | prisma
+    --linter <tool>          Linter & formatter: none | biome | eslint
     --docker / --no-docker   Generate Docker setup
     --git / --no-git         Initialize a git repository
     --install / --no-install Automatically install dependencies
@@ -137,7 +147,7 @@ async function main(): Promise<void> {
     if (args.yes) {
       targetDir = 'froot-app';
     } else {
-      printStep(1, 5, 'Directory');
+      printStep(1, 6, 'Directory');
       targetDir = await promptText('Project directory:', 'my-froot-app', (input) => {
         if (!input.trim()) return 'Project name cannot be empty';
         return true;
@@ -153,7 +163,7 @@ async function main(): Promise<void> {
   if (fs.existsSync(resolvedTarget)) {
     const existingFiles = fs.readdirSync(resolvedTarget);
     if (existingFiles.length > 0 && !args.yes) {
-      printStep(1, 5, 'Directory warning');
+      printStep(1, 6, 'Directory warning');
       const proceed = await promptConfirm(
         `Directory "${targetDir}" is not empty. Continue?`,
         false
@@ -179,7 +189,7 @@ async function main(): Promise<void> {
     if (args.yes) {
       selectedTemplate = TEMPLATES['mvc']!;
     } else {
-      printStep(2, 5, 'Template');
+      printStep(2, 6, 'Template');
       const choice = await promptSelect(
         'Select a template:',
         TEMPLATE_LIST.map((t) => ({
@@ -196,7 +206,7 @@ async function main(): Promise<void> {
   // 3. Database ORM Selection
   let dbOption = args.db || 'none';
   if (!args.db && !args.yes) {
-    printStep(3, 5, 'Database');
+    printStep(3, 6, 'Database');
     dbOption = await promptSelect<'none' | 'drizzle' | 'prisma'>(
       'Include database ORM?',
       [
@@ -208,12 +218,27 @@ async function main(): Promise<void> {
     console.log();
   }
 
-  // 4. Package Manager Selection
+  // 4. Linter & Formatter Selection
+  let linterOption = args.linter || 'none';
+  if (!args.linter && !args.yes) {
+    printStep(4, 6, 'Linter & Formatter');
+    linterOption = await promptSelect<'none' | 'biome' | 'eslint'>(
+      'Code quality tooling:',
+      [
+        { value: 'none', label: 'None', hint: 'No linter config' },
+        { value: 'biome', label: 'Biome', hint: 'Fast Rust linter & formatter' },
+        { value: 'eslint', label: 'ESLint', hint: 'ESLint 9 & Prettier' },
+      ]
+    );
+    console.log();
+  }
+
+  // 5. Package Manager Selection
   const detectedPm = detectCurrentPackageManager();
   let pkgManager = args.pkgManager || detectedPm;
 
   if (!args.pkgManager && !args.yes) {
-    printStep(4, 5, 'Package manager');
+    printStep(5, 6, 'Package manager');
     pkgManager = await promptSelect<'pnpm' | 'npm' | 'yarn' | 'bun'>(
       'Select package manager:',
       [
@@ -226,13 +251,13 @@ async function main(): Promise<void> {
     console.log();
   }
 
-  // 5. Git, Docker & Install Preferences
+  // 6. Git, Docker & Install Preferences
   let gitInit = args.git;
   let docker = args.docker;
   let installDeps = args.install;
 
   if (!args.yes) {
-    printStep(5, 5, 'Preferences');
+    printStep(6, 6, 'Preferences');
     if (gitInit === undefined) {
       gitInit = await promptConfirm('Initialize git repository?', true);
     }
@@ -249,7 +274,7 @@ async function main(): Promise<void> {
     if (installDeps === undefined) installDeps = true;
   }
 
-  // 6. Scaffold Project
+  // 7. Scaffold Project
   const startTime = performance.now();
   try {
     const result = await scaffoldProject({
@@ -261,6 +286,7 @@ async function main(): Promise<void> {
       installDeps: Boolean(installDeps),
       database: dbOption,
       docker: Boolean(docker),
+      linter: linterOption,
     });
 
     const durationMs = Math.round(performance.now() - startTime);

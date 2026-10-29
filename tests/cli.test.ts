@@ -304,4 +304,58 @@ describe('create-frootjs Templates & Scaffolder', () => {
     assert.ok(dockerfile.includes('FROM node:22-alpine'));
     assert.ok(dockerfile.includes('dist/index.js'));
   });
+
+  it('scaffolds project with Biome linter add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-biome');
+    const template = getTemplate('minimal')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-biome',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      linter: 'biome',
+    });
+
+    assert.ok(result.filesWritten >= 6);
+    const hasBiomeJson = await fs.stat(path.join(targetDir, 'biome.json'));
+    assert.ok(hasBiomeJson.isFile());
+
+    const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
+    assert.ok(pkg.devDependencies['@biomejs/biome']);
+    assert.equal(pkg.scripts['lint'], 'biome lint src/');
+    assert.equal(pkg.scripts['format'], 'biome format --write src/');
+    assert.equal(pkg.scripts['check'], 'biome check src/');
+  });
+
+  it('scaffolds project with ESLint + Prettier add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-eslint');
+    const template = getTemplate('minimal')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-eslint',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      linter: 'eslint',
+    });
+
+    assert.ok(result.filesWritten >= 7);
+    const hasEslint = await fs.stat(path.join(targetDir, 'eslint.config.js'));
+    assert.ok(hasEslint.isFile());
+    const hasPrettier = await fs.stat(path.join(targetDir, '.prettierrc'));
+    assert.ok(hasPrettier.isFile());
+
+    const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
+    assert.ok(pkg.devDependencies['eslint']);
+    assert.ok(pkg.devDependencies['prettier']);
+    assert.ok(pkg.devDependencies['@eslint/js']);
+    assert.ok(pkg.devDependencies['typescript-eslint']);
+    assert.equal(pkg.scripts['lint'], 'eslint src/');
+    assert.equal(pkg.scripts['format'], 'prettier --write src/');
+  });
 });
