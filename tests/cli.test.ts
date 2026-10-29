@@ -156,7 +156,7 @@ describe('create-frootjs Templates & Scaffolder', () => {
     assert.ok(serverFile.includes('app.openapi'));
   });
 
-  it('scaffolds fullstack Next.js-alternative template onto disk with @froot/fullstack', async () => {
+  it('scaffolds fullstack Next.js-alternative template onto disk with froot-fullstack', async () => {
     const targetDir = path.join(tempBaseDir, 'test-fullstack');
     const template = getTemplate('fullstack')!;
 
@@ -176,7 +176,7 @@ describe('create-frootjs Templates & Scaffolder', () => {
     assert.ok(docsLayout.isFile());
 
     const pkgJson = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
-    assert.ok(pkgJson.dependencies['@froot/fullstack']);
+    assert.ok(pkgJson.dependencies['froot-fullstack']);
     assert.ok(pkgJson.dependencies['preact']);
   });
 

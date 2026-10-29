@@ -24,8 +24,8 @@ export const fullstackTemplate: TemplateDefinition = {
             start: 'node dist/server.js',
           },
           dependencies: {
-            '@froot/fullstack': '^1.0.0',
-            frootjs: '^1.0.4',
+            'froot-fullstack': '^1.0.0',
+            frootjs: '^1.0.5',
             preact: '^11.1.0',
             'preact-render-to-string': '^6.8.2',
           },
@@ -302,7 +302,7 @@ export function DocsPage({ title, category, contentHtml }: DocsPageProps) {
       'src/server.tsx': `import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Froot } from 'frootjs';
-import { createAppRouter, renderMarkdownFile } from '@froot/fullstack';
+import { createAppRouter, renderMarkdownFile } from 'froot-fullstack';
 import { RootLayout } from './layouts/RootLayout.js';
 import { DocsLayout } from './layouts/DocsLayout.js';
 import { HomePage } from './pages/HomePage.js';
