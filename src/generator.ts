@@ -10,6 +10,7 @@ import { promisify } from 'node:util';
 import { TemplateDefinition } from './templates/index.js';
 import { c, Spinner, printWarning } from './ui.js';
 import { DatabaseOption, applyDatabaseAddon } from './addons/database.js';
+import { applyDockerAddon } from './addons/docker.js';
 
 const execAsync = promisify(exec);
 
@@ -21,6 +22,7 @@ export interface ScaffoldOptions {
   gitInit: boolean;
   installDeps: boolean;
   database?: DatabaseOption;
+  docker?: boolean;
 }
 
 export interface ScaffoldResult {
@@ -31,7 +33,7 @@ export interface ScaffoldResult {
 }
 
 export async function scaffoldProject(options: ScaffoldOptions): Promise<ScaffoldResult> {
-  const { targetDir, projectName, template, pkgManager, gitInit, installDeps, database } = options;
+  const { targetDir, projectName, template, pkgManager, gitInit, installDeps, database, docker } = options;
 
   // 1. Ensure target directory exists
   await fs.mkdir(targetDir, { recursive: true });
@@ -42,6 +44,11 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
 
   if (database && database !== 'none') {
     applyDatabaseAddon(files, database);
+  }
+
+  if (docker) {
+    const entryPoint = template.id === 'minimal' ? 'dist/index.js' : 'dist/server.js';
+    applyDockerAddon(files, { projectName, pkgManager, entryPoint });
   }
 
   const fileKeys = Object.keys(files);

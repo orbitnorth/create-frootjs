@@ -27,6 +27,7 @@ interface ParsedArgs {
   template?: string;
   pkgManager?: 'pnpm' | 'npm' | 'yarn' | 'bun';
   db?: 'none' | 'drizzle' | 'prisma';
+  docker?: boolean;
   git?: boolean;
   install?: boolean;
   yes?: boolean;
@@ -55,6 +56,10 @@ function parseCliArgs(argv: string[]): ParsedArgs {
       args.install = true;
     } else if (item === '--no-install') {
       args.install = false;
+    } else if (item === '--docker') {
+      args.docker = true;
+    } else if (item === '--no-docker') {
+      args.docker = false;
     } else if (item === '--template' || item === '-t') {
       args.template = raw[++i];
     } else if (item.startsWith('--template=')) {
@@ -92,6 +97,7 @@ function printUsage(): void {
                              • minimal      Lean single-file starter
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
     --db <orm>               Database ORM: none | drizzle | prisma
+    --docker / --no-docker   Generate Docker setup
     --git / --no-git         Initialize a git repository
     --install / --no-install Automatically install dependencies
     -y, --yes                Accept all defaults non-interactively
@@ -220,8 +226,9 @@ async function main(): Promise<void> {
     console.log();
   }
 
-  // 5. Git Initialization & Install Preferences
+  // 5. Git, Docker & Install Preferences
   let gitInit = args.git;
+  let docker = args.docker;
   let installDeps = args.install;
 
   if (!args.yes) {
@@ -229,12 +236,16 @@ async function main(): Promise<void> {
     if (gitInit === undefined) {
       gitInit = await promptConfirm('Initialize git repository?', true);
     }
+    if (docker === undefined) {
+      docker = await promptConfirm('Include Docker container setup?', false);
+    }
     if (installDeps === undefined) {
       installDeps = await promptConfirm(`Install dependencies with ${pkgManager}?`, true);
     }
     console.log();
   } else {
     if (gitInit === undefined) gitInit = true;
+    if (docker === undefined) docker = false;
     if (installDeps === undefined) installDeps = true;
   }
 
@@ -249,6 +260,7 @@ async function main(): Promise<void> {
       gitInit: Boolean(gitInit),
       installDeps: Boolean(installDeps),
       database: dbOption,
+      docker: Boolean(docker),
     });
 
     const durationMs = Math.round(performance.now() - startTime);

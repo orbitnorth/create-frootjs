@@ -277,4 +277,31 @@ describe('create-frootjs Templates & Scaffolder', () => {
     assert.ok(pkg.devDependencies['prisma']);
     assert.ok(pkg.scripts['db:push']);
   });
+
+  it('scaffolds project with Docker add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-docker');
+    const template = getTemplate('minimal')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-docker',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      docker: true,
+    });
+
+    assert.ok(result.filesWritten >= 8);
+    const hasDockerfile = await fs.stat(path.join(targetDir, 'Dockerfile'));
+    assert.ok(hasDockerfile.isFile());
+    const hasCompose = await fs.stat(path.join(targetDir, 'docker-compose.yml'));
+    assert.ok(hasCompose.isFile());
+    const hasDockerignore = await fs.stat(path.join(targetDir, '.dockerignore'));
+    assert.ok(hasDockerignore.isFile());
+
+    const dockerfile = await fs.readFile(path.join(targetDir, 'Dockerfile'), 'utf8');
+    assert.ok(dockerfile.includes('FROM node:22-alpine'));
+    assert.ok(dockerfile.includes('dist/index.js'));
+  });
 });
