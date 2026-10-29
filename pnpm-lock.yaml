@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.5
+      frootjs:
+        specifier: link:E:/Business/MetaTools/froot/froot-framework
+        version: link:../froot-framework
       typescript:
         specifier: ^5.8.0
         version: 5.9.3

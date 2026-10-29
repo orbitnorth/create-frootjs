@@ -17,15 +17,16 @@ export const fullstackTemplate: TemplateDefinition = {
           version: '1.0.0',
           type: 'module',
           scripts: {
-            dev: 'node --experimental-strip-types src/server.tsx',
+            dev: 'tsx watch src/server.tsx',
             build: 'tsc',
             start: 'node dist/server.js',
           },
           dependencies: {
-            frootjs: '^1.0.1',
+            frootjs: '^1.0.2',
           },
           devDependencies: {
             '@types/node': '^22.10.0',
+            tsx: '^4.19.0',
             typescript: '^5.8.0',
           },
         },

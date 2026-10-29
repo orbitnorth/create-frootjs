@@ -17,16 +17,17 @@ export const mvcTemplate: TemplateDefinition = {
           version: '1.0.0',
           type: 'module',
           scripts: {
-            dev: 'node --experimental-strip-types src/server.ts',
+            dev: 'tsx watch src/server.ts',
             build: 'tsc',
             start: 'node dist/server.js',
             test: 'node --test tests/*.test.ts',
           },
           dependencies: {
-            frootjs: '^1.0.1',
+            frootjs: '^1.0.2',
           },
           devDependencies: {
             '@types/node': '^22.10.0',
+            tsx: '^4.19.0',
             typescript: '^5.8.0',
           },
         },
@@ -105,7 +106,8 @@ export class UserService {
     return Array.from(usersTable.values());
   }
 
-  static async findById(id: string): Promise<User | null> {
+  static async findById(id?: string): Promise<User | null> {
+    if (!id) return null;
     return usersTable.get(id) ?? null;
   }
 
@@ -122,7 +124,8 @@ export class UserService {
     return user;
   }
 
-  static async delete(id: string): Promise<boolean> {
+  static async delete(id?: string): Promise<boolean> {
+    if (!id) return false;
     return usersTable.delete(id);
   }
 }

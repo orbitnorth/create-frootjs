@@ -57,7 +57,7 @@ describe('create-frootjs Templates & Scaffolder', () => {
         pkg.dependencies?.frootjs,
         `Template ${t.id} must declare frootjs as dependency`
       );
-      assert.equal(pkg.dependencies.frootjs, '^1.0.1');
+      assert.equal(pkg.dependencies.frootjs, '^1.0.2');
     }
   });
 
@@ -188,5 +188,43 @@ describe('create-frootjs Templates & Scaffolder', () => {
 
     const indexFile = await fs.stat(path.join(targetDir, 'src/index.ts'));
     assert.ok(indexFile.isFile());
+  });
+
+  it('compiles scaffolded modular template with typescript without errors', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-modular');
+    // Link node_modules from create-frootjs so tsc can resolve @types/node
+    const localNodeModules = path.resolve('node_modules');
+    try {
+      await fs.symlink(localNodeModules, path.join(targetDir, 'node_modules'), 'junction');
+    } catch {
+      // junction may already exist
+    }
+
+    const { exec } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const execAsync = promisify(exec);
+
+    // Run tsc --noEmit
+    const tscBin = path.join(localNodeModules, 'typescript/bin/tsc');
+    const { stderr } = await execAsync(`node "${tscBin}" --noEmit`, { cwd: targetDir });
+    assert.equal(stderr, '');
+  });
+
+  it('compiles scaffolded mvc template with typescript without errors', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-mvc');
+    const localNodeModules = path.resolve('node_modules');
+    try {
+      await fs.symlink(localNodeModules, path.join(targetDir, 'node_modules'), 'junction');
+    } catch {
+      // ignore
+    }
+
+    const { exec } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const execAsync = promisify(exec);
+
+    const tscBin = path.join(localNodeModules, 'typescript/bin/tsc');
+    const { stderr } = await execAsync(`node "${tscBin}" --noEmit`, { cwd: targetDir });
+    assert.equal(stderr, '');
   });
 });

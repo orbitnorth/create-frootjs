@@ -17,16 +17,17 @@ export const modularTemplate: TemplateDefinition = {
           version: '1.0.0',
           type: 'module',
           scripts: {
-            dev: 'node --experimental-strip-types src/server.ts',
+            dev: 'tsx watch src/server.ts',
             build: 'tsc',
             start: 'node dist/server.js',
             test: 'node --test tests/*.test.ts',
           },
           dependencies: {
-            frootjs: '^1.0.1',
+            frootjs: '^1.0.2',
           },
           devDependencies: {
             '@types/node': '^22.10.0',
+            tsx: '^4.19.0',
             typescript: '^5.8.0',
           },
         },
@@ -101,14 +102,13 @@ export const authGuard: MiddlewareHandler = async (c, next) => {
   }
 
   const token = authHeader.slice(7).trim();
-  const payload = await verifyJwt(token, JWT_SECRET);
-
-  if (!payload) {
+  try {
+    const payload = await verifyJwt(token, JWT_SECRET);
+    c.set('user', payload);
+    await next();
+  } catch {
     return c.json({ error: 'Unauthorized: token is invalid or expired' }, 401);
   }
-
-  c.set('user', payload);
-  await next();
 };
 `,
 
@@ -150,9 +150,9 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         role: user.role,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 hours
       },
-      JWT_SECRET
+      JWT_SECRET,
+      { expiresIn: 60 * 60 * 24 }
     );
   }
 }
@@ -205,7 +205,8 @@ export class UsersService {
     return mockUsers;
   }
 
-  static getById(id: string): UserProfile | undefined {
+  static getById(id?: string): UserProfile | undefined {
+    if (!id) return undefined;
     return mockUsers.find((u) => u.id === id);
   }
 }
@@ -253,7 +254,8 @@ export class ProductsService {
     return productsTable;
   }
 
-  static find(id: string): Product | undefined {
+  static find(id?: string): Product | undefined {
+    if (!id) return undefined;
     return productsTable.find((p) => p.id === id);
   }
 }
