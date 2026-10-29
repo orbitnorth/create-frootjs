@@ -20,7 +20,7 @@ import {
 import { TEMPLATES, TEMPLATE_LIST, getTemplate } from './templates/index.js';
 import { scaffoldProject } from './generator.js';
 
-const VERSION = '1.0.7';
+const VERSION = '1.0.8';
 
 interface ParsedArgs {
   targetDir?: string;
@@ -30,11 +30,13 @@ interface ParsedArgs {
   docker?: boolean;
   linter?: 'none' | 'biome' | 'eslint';
   testing?: 'none' | 'vitest' | 'node';
+  agent?: boolean;
   git?: boolean;
   install?: boolean;
   yes?: boolean;
   help?: boolean;
   version?: boolean;
+  schema?: boolean;
 }
 
 function parseCliArgs(argv: string[]): ParsedArgs {
@@ -48,6 +50,8 @@ function parseCliArgs(argv: string[]): ParsedArgs {
       args.help = true;
     } else if (item === '--version' || item === '-v') {
       args.version = true;
+    } else if (item === '--schema' || item === '--json-schema' || item === 'schema') {
+      args.schema = true;
     } else if (item === '--yes' || item === '-y') {
       args.yes = true;
     } else if (item === '--git') {
@@ -62,6 +66,10 @@ function parseCliArgs(argv: string[]): ParsedArgs {
       args.docker = true;
     } else if (item === '--no-docker') {
       args.docker = false;
+    } else if (item === '--agent' || item === '--ai') {
+      args.agent = true;
+    } else if (item === '--no-agent' || item === '--no-ai') {
+      args.agent = false;
     } else if (item === '--biome') {
       args.linter = 'biome';
     } else if (item === '--eslint') {
@@ -115,6 +123,8 @@ function printUsage(): void {
     --db <orm>               Database ORM: none | drizzle | prisma
     --linter <tool>          Linter & formatter: none | biome | eslint
     --test <tool>            Testing framework: none | vitest | node
+    --agent / --no-agent     Generate AGENT.md & .cursorrules for AI assistants
+    --schema                 Output machine-readable JSON schema for AI agents
     --docker / --no-docker   Generate Docker setup
     --git / --no-git         Initialize a git repository
     --install / --no-install Automatically install dependencies
@@ -122,6 +132,77 @@ function printUsage(): void {
     -v, --version            Display version
     -h, --help               Display help information
 `);
+}
+
+function printAgentSchema(): void {
+  const schema = {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    name: 'create-frootjs',
+    version: VERSION,
+    description: 'CLI generator for scaffolding high-performance Froot TypeScript web applications',
+    usage: 'npm create frootjs [project-directory] [options]',
+    nonInteractiveFlag: '-y or --yes',
+    templates: TEMPLATE_LIST.map((t) => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+    })),
+    options: {
+      template: {
+        flag: '-t, --template <name>',
+        choices: ['mvc', 'modular', 'streaming', 'websocket', 'openapi', 'fullstack', 'minimal'],
+        default: 'mvc',
+        description: 'Architectural pattern of the scaffolded application',
+      },
+      database: {
+        flag: '--db <orm>',
+        choices: ['none', 'drizzle', 'prisma'],
+        default: 'none',
+        description: 'Database ORM integration',
+      },
+      docker: {
+        flag: '--docker / --no-docker',
+        type: 'boolean',
+        default: false,
+        description: 'Generate multi-stage Dockerfile and docker-compose.yml',
+      },
+      linter: {
+        flag: '--linter <tool>',
+        choices: ['none', 'biome', 'eslint'],
+        default: 'none',
+        description: 'Code quality and linting tool',
+      },
+      testing: {
+        flag: '--test <framework>',
+        choices: ['none', 'vitest', 'node'],
+        default: 'none',
+        description: 'Unit testing suite',
+      },
+      agentRules: {
+        flag: '--agent / --no-agent',
+        type: 'boolean',
+        default: true,
+        description: 'Generate AGENT.md and .cursorrules for AI agents and coding assistants',
+      },
+      packageManager: {
+        flag: '--pm <manager>',
+        choices: ['pnpm', 'npm', 'yarn', 'bun'],
+        default: 'auto-detected',
+        description: 'Package manager for dependency installation',
+      },
+    },
+    recipes: {
+      enterpriseApi: 'npm create frootjs my-app -t modular --db drizzle --docker --linter biome --test vitest -y',
+      mvcCrudApp: 'npm create frootjs my-app -t mvc --db drizzle --linter biome --test vitest -y',
+      restApiScalarDocs: 'npm create frootjs my-app -t openapi --db prisma --linter eslint --test node -y',
+      realtimeWebSocket: 'npm create frootjs my-app -t websocket --linter biome --test vitest -y',
+      aiStreamingSSE: 'npm create frootjs my-app -t streaming --linter biome --test vitest -y',
+      fullstackJsx: 'npm create frootjs my-app -t fullstack --linter biome --test vitest -y',
+      minimalStarter: 'npm create frootjs my-app -t minimal --docker --test vitest -y',
+    },
+  };
+
+  console.log(JSON.stringify(schema, null, 2));
 }
 
 /** Detect which package manager invoked create-frootjs */
@@ -135,6 +216,11 @@ function detectCurrentPackageManager(): 'pnpm' | 'npm' | 'yarn' | 'bun' {
 
 async function main(): Promise<void> {
   const args = parseCliArgs(process.argv);
+
+  if (args.schema) {
+    printAgentSchema();
+    return;
+  }
 
   if (args.version) {
     console.log(`create-frootjs v${VERSION}`);
@@ -311,6 +397,7 @@ async function main(): Promise<void> {
       docker: Boolean(docker),
       linter: linterOption,
       testing: testingOption,
+      agentRules: args.agent !== false,
     });
 
     const durationMs = Math.round(performance.now() - startTime);

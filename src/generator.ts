@@ -13,6 +13,7 @@ import { DatabaseOption, applyDatabaseAddon } from './addons/database.js';
 import { applyDockerAddon } from './addons/docker.js';
 import { LinterOption, applyLinterAddon } from './addons/linter.js';
 import { TestingOption, applyTestingAddon } from './addons/testing.js';
+import { applyAgentAddon } from './addons/agent.js';
 
 const execAsync = promisify(exec);
 
@@ -27,6 +28,7 @@ export interface ScaffoldOptions {
   docker?: boolean;
   linter?: LinterOption;
   testing?: TestingOption;
+  agentRules?: boolean;
 }
 
 export interface ScaffoldResult {
@@ -37,7 +39,19 @@ export interface ScaffoldResult {
 }
 
 export async function scaffoldProject(options: ScaffoldOptions): Promise<ScaffoldResult> {
-  const { targetDir, projectName, template, pkgManager, gitInit, installDeps, database, docker, linter, testing } = options;
+  const {
+    targetDir,
+    projectName,
+    template,
+    pkgManager,
+    gitInit,
+    installDeps,
+    database,
+    docker,
+    linter,
+    testing,
+    agentRules = true,
+  } = options;
 
   // 1. Ensure target directory exists
   await fs.mkdir(targetDir, { recursive: true });
@@ -61,6 +75,19 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
 
   if (testing && testing !== 'none') {
     applyTestingAddon(files, testing, { projectName });
+  }
+
+  if (agentRules) {
+    applyAgentAddon(files, {
+      projectName,
+      templateId: template.id,
+      templateName: template.name,
+      pkgManager,
+      database,
+      linter,
+      testing,
+      docker,
+    });
   }
 
   const fileKeys = Object.keys(files);

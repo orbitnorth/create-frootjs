@@ -413,4 +413,75 @@ describe('create-frootjs Templates & Scaffolder', () => {
     const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
     assert.equal(pkg.scripts['test'], 'node --test tests/*.test.ts');
   });
+
+  it('scaffolds project with AGENT.md and .cursorrules by default', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-agent-default');
+    const template = getTemplate('mvc')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-agent-default',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      database: 'drizzle',
+      testing: 'vitest',
+    });
+
+    const hasAgent = await fs.stat(path.join(targetDir, 'AGENT.md'));
+    assert.ok(hasAgent.isFile());
+    const hasCursorRules = await fs.stat(path.join(targetDir, '.cursorrules'));
+    assert.ok(hasCursorRules.isFile());
+
+    const agentContent = await fs.readFile(path.join(targetDir, 'AGENT.md'), 'utf8');
+    assert.ok(agentContent.includes('# AI Agent Guide: test-agent-default'));
+    assert.ok(agentContent.includes('Database: Drizzle ORM + SQLite'));
+    assert.ok(agentContent.includes('Testing: Vitest'));
+    assert.ok(agentContent.includes('Anti-Patterns to AVOID'));
+    assert.ok(agentContent.includes('app.fetch(request)'));
+
+    const cursorContent = await fs.readFile(path.join(targetDir, '.cursorrules'), 'utf8');
+    assert.ok(cursorContent.includes('Froot Framework Rules'));
+  });
+
+  it('allows disabling agent files via agentRules: false', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-no-agent');
+    const template = getTemplate('minimal')!;
+
+    await scaffoldProject({
+      targetDir,
+      projectName: 'test-no-agent',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      agentRules: false,
+    });
+
+    let agentExists = false;
+    try {
+      await fs.stat(path.join(targetDir, 'AGENT.md'));
+      agentExists = true;
+    } catch {
+      agentExists = false;
+    }
+    assert.equal(agentExists, false);
+  });
+
+  it('outputs valid JSON schema when called with --schema', async () => {
+    const { exec } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const execAsync = promisify(exec);
+
+    const { stdout } = await execAsync('node dist/index.js --schema', { cwd: path.resolve() });
+    const schema = JSON.parse(stdout);
+
+    assert.equal(schema.name, 'create-frootjs');
+    assert.ok(Array.isArray(schema.templates));
+    assert.equal(schema.templates.length, 7);
+    assert.ok(schema.options.template);
+    assert.ok(schema.options.database);
+    assert.ok(schema.recipes.enterpriseApi);
+  });
 });
