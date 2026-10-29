@@ -26,6 +26,7 @@ interface ParsedArgs {
   targetDir?: string;
   template?: string;
   pkgManager?: 'pnpm' | 'npm' | 'yarn' | 'bun';
+  db?: 'none' | 'drizzle' | 'prisma';
   git?: boolean;
   install?: boolean;
   yes?: boolean;
@@ -62,6 +63,10 @@ function parseCliArgs(argv: string[]): ParsedArgs {
       args.pkgManager = raw[++i] as ParsedArgs['pkgManager'];
     } else if (item.startsWith('--pm=')) {
       args.pkgManager = item.split('=')[1] as ParsedArgs['pkgManager'];
+    } else if (item === '--db' || item === '--database') {
+      args.db = raw[++i] as ParsedArgs['db'];
+    } else if (item.startsWith('--db=')) {
+      args.db = item.split('=')[1] as ParsedArgs['db'];
     } else if (!item.startsWith('-') && !args.targetDir) {
       args.targetDir = item;
     }
@@ -86,6 +91,7 @@ function printUsage(): void {
                              • fullstack    Server-rendered JSX views
                              • minimal      Lean single-file starter
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
+    --db <orm>               Database ORM: none | drizzle | prisma
     --git / --no-git         Initialize a git repository
     --install / --no-install Automatically install dependencies
     -y, --yes                Accept all defaults non-interactively
@@ -125,7 +131,7 @@ async function main(): Promise<void> {
     if (args.yes) {
       targetDir = 'froot-app';
     } else {
-      printStep(1, 4, 'Directory');
+      printStep(1, 5, 'Directory');
       targetDir = await promptText('Project directory:', 'my-froot-app', (input) => {
         if (!input.trim()) return 'Project name cannot be empty';
         return true;
@@ -141,7 +147,7 @@ async function main(): Promise<void> {
   if (fs.existsSync(resolvedTarget)) {
     const existingFiles = fs.readdirSync(resolvedTarget);
     if (existingFiles.length > 0 && !args.yes) {
-      printStep(1, 4, 'Directory warning');
+      printStep(1, 5, 'Directory warning');
       const proceed = await promptConfirm(
         `Directory "${targetDir}" is not empty. Continue?`,
         false
@@ -167,7 +173,7 @@ async function main(): Promise<void> {
     if (args.yes) {
       selectedTemplate = TEMPLATES['mvc']!;
     } else {
-      printStep(2, 4, 'Template');
+      printStep(2, 5, 'Template');
       const choice = await promptSelect(
         'Select a template:',
         TEMPLATE_LIST.map((t) => ({
@@ -181,12 +187,27 @@ async function main(): Promise<void> {
     }
   }
 
-  // 3. Package Manager Selection
+  // 3. Database ORM Selection
+  let dbOption = args.db || 'none';
+  if (!args.db && !args.yes) {
+    printStep(3, 5, 'Database');
+    dbOption = await promptSelect<'none' | 'drizzle' | 'prisma'>(
+      'Include database ORM?',
+      [
+        { value: 'none', label: 'None', hint: 'In-memory / no database' },
+        { value: 'drizzle', label: 'Drizzle', hint: 'Drizzle ORM & SQLite' },
+        { value: 'prisma', label: 'Prisma', hint: 'Prisma & SQLite starter' },
+      ]
+    );
+    console.log();
+  }
+
+  // 4. Package Manager Selection
   const detectedPm = detectCurrentPackageManager();
   let pkgManager = args.pkgManager || detectedPm;
 
   if (!args.pkgManager && !args.yes) {
-    printStep(3, 4, 'Package manager');
+    printStep(4, 5, 'Package manager');
     pkgManager = await promptSelect<'pnpm' | 'npm' | 'yarn' | 'bun'>(
       'Select package manager:',
       [
@@ -199,12 +220,12 @@ async function main(): Promise<void> {
     console.log();
   }
 
-  // 4. Git Initialization & Install Preferences
+  // 5. Git Initialization & Install Preferences
   let gitInit = args.git;
   let installDeps = args.install;
 
   if (!args.yes) {
-    printStep(4, 4, 'Preferences');
+    printStep(5, 5, 'Preferences');
     if (gitInit === undefined) {
       gitInit = await promptConfirm('Initialize git repository?', true);
     }
@@ -217,7 +238,7 @@ async function main(): Promise<void> {
     if (installDeps === undefined) installDeps = true;
   }
 
-  // 5. Scaffold Project
+  // 6. Scaffold Project
   const startTime = performance.now();
   try {
     const result = await scaffoldProject({
@@ -227,6 +248,7 @@ async function main(): Promise<void> {
       pkgManager,
       gitInit: Boolean(gitInit),
       installDeps: Boolean(installDeps),
+      database: dbOption,
     });
 
     const durationMs = Math.round(performance.now() - startTime);

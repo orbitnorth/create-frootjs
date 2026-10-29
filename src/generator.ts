@@ -9,6 +9,7 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { TemplateDefinition } from './templates/index.js';
 import { c, Spinner, printWarning } from './ui.js';
+import { DatabaseOption, applyDatabaseAddon } from './addons/database.js';
 
 const execAsync = promisify(exec);
 
@@ -19,6 +20,7 @@ export interface ScaffoldOptions {
   pkgManager: 'pnpm' | 'npm' | 'yarn' | 'bun';
   gitInit: boolean;
   installDeps: boolean;
+  database?: DatabaseOption;
 }
 
 export interface ScaffoldResult {
@@ -29,7 +31,7 @@ export interface ScaffoldResult {
 }
 
 export async function scaffoldProject(options: ScaffoldOptions): Promise<ScaffoldResult> {
-  const { targetDir, projectName, template, pkgManager, gitInit, installDeps } = options;
+  const { targetDir, projectName, template, pkgManager, gitInit, installDeps, database } = options;
 
   // 1. Ensure target directory exists
   await fs.mkdir(targetDir, { recursive: true });
@@ -37,6 +39,11 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
   // 2. Generate files map from template
   const writeSpinner = new Spinner(`Scaffolding ${template.name} template`).start();
   const files = template.generate(projectName);
+
+  if (database && database !== 'none') {
+    applyDatabaseAddon(files, database);
+  }
+
   const fileKeys = Object.keys(files);
 
   // 3. Write each file to destination

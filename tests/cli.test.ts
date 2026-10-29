@@ -227,4 +227,54 @@ describe('create-frootjs Templates & Scaffolder', () => {
     const { stderr } = await execAsync(`node "${tscBin}" --noEmit`, { cwd: targetDir });
     assert.equal(stderr, '');
   });
+
+  it('scaffolds project with Drizzle ORM add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-drizzle');
+    const template = getTemplate('minimal')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-drizzle',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      database: 'drizzle',
+    });
+
+    assert.ok(result.filesWritten >= 7);
+    const hasConfig = await fs.stat(path.join(targetDir, 'drizzle.config.ts'));
+    assert.ok(hasConfig.isFile());
+    const hasSchema = await fs.stat(path.join(targetDir, 'src/db/schema.ts'));
+    assert.ok(hasSchema.isFile());
+
+    const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
+    assert.ok(pkg.dependencies['drizzle-orm']);
+    assert.ok(pkg.dependencies['better-sqlite3']);
+    assert.ok(pkg.scripts['db:push']);
+  });
+
+  it('scaffolds project with Prisma add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-prisma');
+    const template = getTemplate('minimal')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-prisma',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      database: 'prisma',
+    });
+
+    assert.ok(result.filesWritten >= 7);
+    const hasSchema = await fs.stat(path.join(targetDir, 'prisma/schema.prisma'));
+    assert.ok(hasSchema.isFile());
+
+    const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
+    assert.ok(pkg.dependencies['@prisma/client']);
+    assert.ok(pkg.devDependencies['prisma']);
+    assert.ok(pkg.scripts['db:push']);
+  });
 });
