@@ -32,9 +32,9 @@ export function applyTestingAddon(
 
   // Resolve where app is exported
   let appImport = '../src/index.js';
-  if (files['src/app.ts']) {
+  if (files['src/app.ts'] || files['src/app.tsx']) {
     appImport = '../src/app.js';
-  } else if (files['src/server.ts']) {
+  } else if (files['src/server.ts'] || files['src/server.tsx']) {
     appImport = '../src/server.js';
   }
 
