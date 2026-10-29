@@ -20,7 +20,7 @@ import {
 import { TEMPLATES, TEMPLATE_LIST, getTemplate } from './templates/index.js';
 import { scaffoldProject } from './generator.js';
 
-const VERSION = '1.0.6';
+const VERSION = '1.0.7';
 
 interface ParsedArgs {
   targetDir?: string;
@@ -29,6 +29,7 @@ interface ParsedArgs {
   db?: 'none' | 'drizzle' | 'prisma';
   docker?: boolean;
   linter?: 'none' | 'biome' | 'eslint';
+  testing?: 'none' | 'vitest' | 'node';
   git?: boolean;
   install?: boolean;
   yes?: boolean;
@@ -69,6 +70,12 @@ function parseCliArgs(argv: string[]): ParsedArgs {
       args.linter = raw[++i] as ParsedArgs['linter'];
     } else if (item.startsWith('--linter=')) {
       args.linter = item.split('=')[1] as ParsedArgs['linter'];
+    } else if (item === '--vitest') {
+      args.testing = 'vitest';
+    } else if (item === '--test' || item === '--testing') {
+      args.testing = raw[++i] as ParsedArgs['testing'];
+    } else if (item.startsWith('--testing=') || item.startsWith('--test=')) {
+      args.testing = item.split('=')[1] as ParsedArgs['testing'];
     } else if (item === '--template' || item === '-t') {
       args.template = raw[++i];
     } else if (item.startsWith('--template=')) {
@@ -107,6 +114,7 @@ function printUsage(): void {
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
     --db <orm>               Database ORM: none | drizzle | prisma
     --linter <tool>          Linter & formatter: none | biome | eslint
+    --test <tool>            Testing framework: none | vitest | node
     --docker / --no-docker   Generate Docker setup
     --git / --no-git         Initialize a git repository
     --install / --no-install Automatically install dependencies
@@ -147,7 +155,7 @@ async function main(): Promise<void> {
     if (args.yes) {
       targetDir = 'froot-app';
     } else {
-      printStep(1, 6, 'Directory');
+      printStep(1, 7, 'Directory');
       targetDir = await promptText('Project directory:', 'my-froot-app', (input) => {
         if (!input.trim()) return 'Project name cannot be empty';
         return true;
@@ -163,7 +171,7 @@ async function main(): Promise<void> {
   if (fs.existsSync(resolvedTarget)) {
     const existingFiles = fs.readdirSync(resolvedTarget);
     if (existingFiles.length > 0 && !args.yes) {
-      printStep(1, 6, 'Directory warning');
+      printStep(1, 7, 'Directory warning');
       const proceed = await promptConfirm(
         `Directory "${targetDir}" is not empty. Continue?`,
         false
@@ -189,7 +197,7 @@ async function main(): Promise<void> {
     if (args.yes) {
       selectedTemplate = TEMPLATES['mvc']!;
     } else {
-      printStep(2, 6, 'Template');
+      printStep(2, 7, 'Template');
       const choice = await promptSelect(
         'Select a template:',
         TEMPLATE_LIST.map((t) => ({
@@ -206,7 +214,7 @@ async function main(): Promise<void> {
   // 3. Database ORM Selection
   let dbOption = args.db || 'none';
   if (!args.db && !args.yes) {
-    printStep(3, 6, 'Database');
+    printStep(3, 7, 'Database');
     dbOption = await promptSelect<'none' | 'drizzle' | 'prisma'>(
       'Include database ORM?',
       [
@@ -221,7 +229,7 @@ async function main(): Promise<void> {
   // 4. Linter & Formatter Selection
   let linterOption = args.linter || 'none';
   if (!args.linter && !args.yes) {
-    printStep(4, 6, 'Linter & Formatter');
+    printStep(4, 7, 'Linter & Formatter');
     linterOption = await promptSelect<'none' | 'biome' | 'eslint'>(
       'Code quality tooling:',
       [
@@ -233,12 +241,27 @@ async function main(): Promise<void> {
     console.log();
   }
 
-  // 5. Package Manager Selection
+  // 5. Testing Framework Selection
+  let testingOption = args.testing || 'none';
+  if (!args.testing && !args.yes) {
+    printStep(5, 7, 'Testing');
+    testingOption = await promptSelect<'none' | 'vitest' | 'node'>(
+      'Testing framework:',
+      [
+        { value: 'vitest', label: 'Vitest', hint: 'Fast modern unit test runner' },
+        { value: 'node', label: 'Node:test', hint: 'Native Node.js test runner' },
+        { value: 'none', label: 'None', hint: 'No testing setup' },
+      ]
+    );
+    console.log();
+  }
+
+  // 6. Package Manager Selection
   const detectedPm = detectCurrentPackageManager();
   let pkgManager = args.pkgManager || detectedPm;
 
   if (!args.pkgManager && !args.yes) {
-    printStep(5, 6, 'Package manager');
+    printStep(6, 7, 'Package manager');
     pkgManager = await promptSelect<'pnpm' | 'npm' | 'yarn' | 'bun'>(
       'Select package manager:',
       [
@@ -251,13 +274,13 @@ async function main(): Promise<void> {
     console.log();
   }
 
-  // 6. Git, Docker & Install Preferences
+  // 7. Git, Docker & Install Preferences
   let gitInit = args.git;
   let docker = args.docker;
   let installDeps = args.install;
 
   if (!args.yes) {
-    printStep(6, 6, 'Preferences');
+    printStep(7, 7, 'Preferences');
     if (gitInit === undefined) {
       gitInit = await promptConfirm('Initialize git repository?', true);
     }
@@ -274,7 +297,7 @@ async function main(): Promise<void> {
     if (installDeps === undefined) installDeps = true;
   }
 
-  // 7. Scaffold Project
+  // 8. Scaffold Project
   const startTime = performance.now();
   try {
     const result = await scaffoldProject({
@@ -287,6 +310,7 @@ async function main(): Promise<void> {
       database: dbOption,
       docker: Boolean(docker),
       linter: linterOption,
+      testing: testingOption,
     });
 
     const durationMs = Math.round(performance.now() - startTime);

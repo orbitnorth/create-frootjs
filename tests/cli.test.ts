@@ -358,4 +358,59 @@ describe('create-frootjs Templates & Scaffolder', () => {
     assert.equal(pkg.scripts['lint'], 'eslint src/');
     assert.equal(pkg.scripts['format'], 'prettier --write src/');
   });
+
+  it('scaffolds project with Vitest testing add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-vitest');
+    const template = getTemplate('minimal')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-vitest',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      testing: 'vitest',
+    });
+
+    assert.ok(result.filesWritten >= 7);
+    const hasConfig = await fs.stat(path.join(targetDir, 'vitest.config.ts'));
+    assert.ok(hasConfig.isFile());
+    const hasTestFile = await fs.stat(path.join(targetDir, 'tests/app.test.ts'));
+    assert.ok(hasTestFile.isFile());
+
+    const testContent = await fs.readFile(path.join(targetDir, 'tests/app.test.ts'), 'utf8');
+    assert.ok(testContent.includes("from 'vitest'"));
+    assert.ok(testContent.includes('app.fetch'));
+
+    const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
+    assert.ok(pkg.devDependencies['vitest']);
+    assert.equal(pkg.scripts['test'], 'vitest run');
+  });
+
+  it('scaffolds project with Node:test testing add-on', async () => {
+    const targetDir = path.join(tempBaseDir, 'test-nodetest');
+    const template = getTemplate('mvc')!;
+
+    const result = await scaffoldProject({
+      targetDir,
+      projectName: 'test-nodetest',
+      template,
+      pkgManager: 'pnpm',
+      gitInit: false,
+      installDeps: false,
+      testing: 'node',
+    });
+
+    assert.ok(result.filesWritten >= 10);
+    const hasTestFile = await fs.stat(path.join(targetDir, 'tests/app.test.ts'));
+    assert.ok(hasTestFile.isFile());
+
+    const testContent = await fs.readFile(path.join(targetDir, 'tests/app.test.ts'), 'utf8');
+    assert.ok(testContent.includes("from 'node:test'"));
+    assert.ok(testContent.includes('app.fetch'));
+
+    const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
+    assert.equal(pkg.scripts['test'], 'node --test tests/*.test.ts');
+  });
 });

@@ -12,6 +12,7 @@ import { c, Spinner, printWarning } from './ui.js';
 import { DatabaseOption, applyDatabaseAddon } from './addons/database.js';
 import { applyDockerAddon } from './addons/docker.js';
 import { LinterOption, applyLinterAddon } from './addons/linter.js';
+import { TestingOption, applyTestingAddon } from './addons/testing.js';
 
 const execAsync = promisify(exec);
 
@@ -25,6 +26,7 @@ export interface ScaffoldOptions {
   database?: DatabaseOption;
   docker?: boolean;
   linter?: LinterOption;
+  testing?: TestingOption;
 }
 
 export interface ScaffoldResult {
@@ -35,7 +37,7 @@ export interface ScaffoldResult {
 }
 
 export async function scaffoldProject(options: ScaffoldOptions): Promise<ScaffoldResult> {
-  const { targetDir, projectName, template, pkgManager, gitInit, installDeps, database, docker, linter } = options;
+  const { targetDir, projectName, template, pkgManager, gitInit, installDeps, database, docker, linter, testing } = options;
 
   // 1. Ensure target directory exists
   await fs.mkdir(targetDir, { recursive: true });
@@ -55,6 +57,10 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
 
   if (linter && linter !== 'none') {
     applyLinterAddon(files, linter);
+  }
+
+  if (testing && testing !== 'none') {
+    applyTestingAddon(files, testing, { projectName });
   }
 
   const fileKeys = Object.keys(files);

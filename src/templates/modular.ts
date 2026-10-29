@@ -298,7 +298,14 @@ app.route('/api', authModule);
 app.route('/api', usersModule);
 app.route('/api', productsModule);
 
-// Health check
+// Root & Health check
+app.get('/', (c) => {
+  return c.json({
+    message: 'Welcome to Froot Modular API',
+    health: '/health',
+  });
+});
+
 app.get('/health', (c) => {
   return c.json({
     status: 'ok',
