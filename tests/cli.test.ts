@@ -169,15 +169,32 @@ describe('create-frootjs Templates & Scaffolder', () => {
       installDeps: false,
     });
 
-    const rootLayout = await fs.stat(path.join(targetDir, 'src/layouts/RootLayout.tsx'));
+    const rootLayout = await fs.stat(path.join(targetDir, 'src/app/layout.tsx'));
     assert.ok(rootLayout.isFile());
 
-    const docsLayout = await fs.stat(path.join(targetDir, 'src/layouts/DocsLayout.tsx'));
+    const docsLayout = await fs.stat(path.join(targetDir, 'src/app/docs/layout.tsx'));
+    assert.ok(docsLayout.isFile());
+
+    const homePage = await fs.stat(path.join(targetDir, 'src/app/page.tsx'));
+    assert.ok(homePage.isFile());
+
+    const docsSlugPage = await fs.stat(path.join(targetDir, 'src/app/docs/[slug]/page.tsx'));
+    assert.ok(docsSlugPage.isFile());
+
+    const stylesCss = await fs.stat(path.join(targetDir, 'src/styles.css'));
+    assert.ok(stylesCss.isFile());
+    const cssContent = await fs.readFile(path.join(targetDir, 'src/styles.css'), 'utf8');
+    assert.ok(cssContent.includes('@import "tailwindcss";'));
+    assert.ok(cssContent.includes('@theme'));
     assert.ok(docsLayout.isFile());
 
     const pkgJson = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
     assert.ok(pkgJson.dependencies['froot-fullstack']);
     assert.ok(pkgJson.dependencies['preact']);
+    assert.ok(pkgJson.devDependencies['@tailwindcss/cli']);
+    assert.ok(pkgJson.devDependencies['tailwindcss']);
+    assert.ok(pkgJson.scripts['build:css']);
+    assert.ok(pkgJson.scripts['dev:css']);
   });
 
   it('scaffolds minimal template onto disk', async () => {
@@ -200,7 +217,8 @@ describe('create-frootjs Templates & Scaffolder', () => {
   it('compiles scaffolded modular template with typescript without errors', async () => {
     const targetDir = path.join(tempBaseDir, 'test-modular');
     // Link node_modules from create-frootjs so tsc can resolve @types/node
-    const localNodeModules = path.resolve('node_modules');
+    const createFrootRoot = path.resolve(import.meta.dirname, '..');
+    const localNodeModules = path.join(createFrootRoot, 'node_modules');
     try {
       await fs.symlink(localNodeModules, path.join(targetDir, 'node_modules'), 'junction');
     } catch {
@@ -219,7 +237,8 @@ describe('create-frootjs Templates & Scaffolder', () => {
 
   it('compiles scaffolded mvc template with typescript without errors', async () => {
     const targetDir = path.join(tempBaseDir, 'test-mvc');
-    const localNodeModules = path.resolve('node_modules');
+    const createFrootRoot = path.resolve(import.meta.dirname, '..');
+    const localNodeModules = path.join(createFrootRoot, 'node_modules');
     try {
       await fs.symlink(localNodeModules, path.join(targetDir, 'node_modules'), 'junction');
     } catch {
@@ -481,7 +500,8 @@ describe('create-frootjs Templates & Scaffolder', () => {
     const { promisify } = await import('node:util');
     const execAsync = promisify(exec);
 
-    const { stdout } = await execAsync('node dist/index.js --schema', { cwd: path.resolve() });
+    const createFrootRoot = path.resolve(import.meta.dirname, '..');
+    const { stdout } = await execAsync('node dist/index.js --schema', { cwd: createFrootRoot });
     const schema = JSON.parse(stdout);
 
     assert.equal(schema.name, 'create-frootjs');
