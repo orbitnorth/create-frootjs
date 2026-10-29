@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const openapiTemplate: TemplateDefinition = {
   id: 'openapi',
-  name: 'OpenAPI 3.1 & Interactive Docs',
-  description: 'Self-documenting REST API with auto-generated OpenAPI 3.1 spec & Scalar reference UI',
+  name: 'OpenAPI',
+  description: 'REST API & Scalar docs',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(

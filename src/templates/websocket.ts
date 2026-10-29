@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const websocketTemplate: TemplateDefinition = {
   id: 'websocket',
-  name: 'WebSocket & Real-Time Pub/Sub',
-  description: 'Cross-runtime WebSockets, pub/sub rooms hub, and interactive browser chat client',
+  name: 'WebSocket',
+  description: 'Real-time pub/sub rooms',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(

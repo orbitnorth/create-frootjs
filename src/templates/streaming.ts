@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const streamingTemplate: TemplateDefinition = {
   id: 'streaming',
-  name: 'Real-Time Streaming & SSE',
-  description: 'Server-Sent Events, AI token streaming simulation, and interactive web dashboard',
+  name: 'Streaming',
+  description: 'SSE & AI token streaming',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(

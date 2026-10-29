@@ -157,6 +157,8 @@ export async function promptSelect<T = string>(
   // Hide cursor during selection
   stdout.write('\x1b[?25l');
 
+  const maxLabelLen = Math.max(...options.map((o) => o.label.length), 10);
+
   const render = (isInitial = false) => {
     if (!isInitial) {
       // Clear previous options lines
@@ -167,10 +169,15 @@ export async function promptSelect<T = string>(
       const opt = options[i]!;
       const isSelected = i === selectedIndex;
       const pointer = isSelected ? `${c.emerald}❯${c.reset}` : ' ';
+      const paddedLabel = opt.label.padEnd(maxLabelLen + 2, ' ');
       const labelText = isSelected
-        ? `${c.bold}${c.emerald}${opt.label}${c.reset}`
-        : `${c.dim}${opt.label}${c.reset}`;
-      const hintText = opt.hint ? ` ${c.gray}(${opt.hint})${c.reset}` : '';
+        ? `${c.bold}${c.emerald}${paddedLabel}${c.reset}`
+        : `${c.dim}${paddedLabel}${c.reset}`;
+      const hintText = opt.hint
+        ? isSelected
+          ? `${c.cyan}${opt.hint}${c.reset}`
+          : `${c.gray}${opt.hint}${c.reset}`
+        : '';
 
       stdout.write(`    ${pointer} ${labelText}${hintText}\n`);
     }

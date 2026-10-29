@@ -20,7 +20,7 @@ import {
 import { TEMPLATES, TEMPLATE_LIST, getTemplate } from './templates/index.js';
 import { scaffoldProject } from './generator.js';
 
-const VERSION = '1.0.3';
+const VERSION = '1.0.4';
 
 interface ParsedArgs {
   targetDir?: string;
@@ -78,13 +78,13 @@ function printUsage(): void {
 
   ${c.bold}Options:${c.reset}
     -t, --template <name>    Template architecture:
-                             • mvc          MVC / Layered Architecture
-                             • modular      Modular Architecture (NestJS-style)
-                             • streaming    Real-Time Streaming & SSE
-                             • websocket    WebSocket & Real-Time Pub/Sub
-                             • openapi      OpenAPI 3.1 & Interactive Docs
-                             • fullstack    Fullstack JSX & SSR
-                             • minimal      Minimal Starter (Single-file)
+                             • mvc          Controllers, services, models
+                             • modular      NestJS-style feature modules
+                             • streaming    SSE & token streaming
+                             • websocket    Real-time pub/sub rooms
+                             • openapi      REST API & Scalar docs
+                             • fullstack    Server-rendered JSX views
+                             • minimal      Lean single-file starter
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
     --git / --no-git         Initialize a git repository
     --install / --no-install Automatically install dependencies
@@ -125,8 +125,8 @@ async function main(): Promise<void> {
     if (args.yes) {
       targetDir = 'froot-app';
     } else {
-      printStep(1, 4, 'Project location');
-      targetDir = await promptText('Where would you like to create your project?', 'my-froot-app', (input) => {
+      printStep(1, 4, 'Directory');
+      targetDir = await promptText('Project directory:', 'my-froot-app', (input) => {
         if (!input.trim()) return 'Project name cannot be empty';
         return true;
       });
@@ -141,9 +141,9 @@ async function main(): Promise<void> {
   if (fs.existsSync(resolvedTarget)) {
     const existingFiles = fs.readdirSync(resolvedTarget);
     if (existingFiles.length > 0 && !args.yes) {
-      printStep(1, 4, 'Target directory warning');
+      printStep(1, 4, 'Directory warning');
       const proceed = await promptConfirm(
-        `Target directory "${targetDir}" is not empty. Continue anyway?`,
+        `Directory "${targetDir}" is not empty. Continue?`,
         false
       );
       console.log();
@@ -167,9 +167,9 @@ async function main(): Promise<void> {
     if (args.yes) {
       selectedTemplate = TEMPLATES['mvc']!;
     } else {
-      printStep(2, 4, 'Choose architectural template');
+      printStep(2, 4, 'Template');
       const choice = await promptSelect(
-        'Select the project template that fits your architecture:',
+        'Select a template:',
         TEMPLATE_LIST.map((t) => ({
           value: t.id,
           label: t.name,
@@ -188,12 +188,12 @@ async function main(): Promise<void> {
   if (!args.pkgManager && !args.yes) {
     printStep(3, 4, 'Package manager');
     pkgManager = await promptSelect<'pnpm' | 'npm' | 'yarn' | 'bun'>(
-      'Which package manager do you want to use?',
+      'Select package manager:',
       [
-        { value: 'pnpm', label: 'pnpm', hint: 'Fast, disk space efficient' },
-        { value: 'npm', label: 'npm', hint: 'Standard Node package manager' },
-        { value: 'yarn', label: 'yarn', hint: 'Classic or Modern Yarn' },
-        { value: 'bun', label: 'bun', hint: 'Ultra-fast all-in-one toolkit' },
+        { value: 'pnpm', label: 'pnpm', hint: 'Fast, disk-efficient' },
+        { value: 'npm', label: 'npm', hint: 'Standard' },
+        { value: 'yarn', label: 'yarn', hint: 'Classic / Modern' },
+        { value: 'bun', label: 'bun', hint: 'All-in-one toolkit' },
       ]
     );
     console.log();
@@ -204,12 +204,12 @@ async function main(): Promise<void> {
   let installDeps = args.install;
 
   if (!args.yes) {
-    printStep(4, 4, 'Project setup preferences');
+    printStep(4, 4, 'Preferences');
     if (gitInit === undefined) {
-      gitInit = await promptConfirm('Initialize a new git repository?', true);
+      gitInit = await promptConfirm('Initialize git repository?', true);
     }
     if (installDeps === undefined) {
-      installDeps = await promptConfirm(`Install dependencies now with ${pkgManager}?`, true);
+      installDeps = await promptConfirm(`Install dependencies with ${pkgManager}?`, true);
     }
     console.log();
   } else {

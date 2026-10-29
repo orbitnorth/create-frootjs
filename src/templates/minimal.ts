@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const minimalTemplate: TemplateDefinition = {
   id: 'minimal',
-  name: 'Minimal Starter (Single-file)',
-  description: 'Lean single-file API starter with basic JSON endpoints and CORS',
+  name: 'Minimal',
+  description: 'Lean single-file starter',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(

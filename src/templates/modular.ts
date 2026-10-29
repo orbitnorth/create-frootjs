@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const modularTemplate: TemplateDefinition = {
   id: 'modular',
-  name: 'Modular Architecture (NestJS-style)',
-  description: 'Domain feature modules (routes, service, schema) with common guards & filters',
+  name: 'Modular',
+  description: 'NestJS-style feature modules',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(

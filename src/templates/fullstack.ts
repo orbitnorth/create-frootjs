@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const fullstackTemplate: TemplateDefinition = {
   id: 'fullstack',
-  name: 'Fullstack JSX & Server-Side Rendering',
-  description: 'Native JSX components, typed layouts, and zero-JS HTML server rendering',
+  name: 'Fullstack',
+  description: 'Server-rendered JSX views',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(

@@ -7,8 +7,8 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE, COMMON_TSCONFIG 
 
 export const mvcTemplate: TemplateDefinition = {
   id: 'mvc',
-  name: 'MVC / Layered Architecture',
-  description: 'Structured enterprise layout: routes, controllers, services, and models',
+  name: 'MVC',
+  description: 'Controllers, services, models',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(
