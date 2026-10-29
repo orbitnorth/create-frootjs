@@ -1,6 +1,6 @@
 /**
  * Project Scaffolding Engine
- * Writes template files to disk, initializes git, and executes dependency installation.
+ * Writes template files to disk, initializes git, and executes dependency installation with animated spinners.
  */
 
 import * as fs from 'node:fs/promises';
@@ -8,7 +8,7 @@ import * as path from 'node:path';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { TemplateDefinition } from './templates/index.js';
-import { c, printSuccess, printInfo, printWarning } from './ui.js';
+import { c, Spinner, printWarning } from './ui.js';
 
 const execAsync = promisify(exec);
 
@@ -35,6 +35,7 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
   await fs.mkdir(targetDir, { recursive: true });
 
   // 2. Generate files map from template
+  const writeSpinner = new Spinner(`Scaffolding ${template.name} template`).start();
   const files = template.generate(projectName);
   const fileKeys = Object.keys(files);
 
@@ -46,34 +47,34 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
     await fs.writeFile(filePath, files[relativePath]!, 'utf8');
   }
 
-  printSuccess(`Created ${c.bold}${fileKeys.length}${c.reset} files from template ${c.emerald}${template.name}${c.reset}`);
+  writeSpinner.stop(`Created ${c.bold}${fileKeys.length}${c.reset} files (${c.emerald}${template.name}${c.reset})`);
 
   // 4. Git initialization
   let gitInitialized = false;
   if (gitInit) {
+    const gitSpinner = new Spinner('Initializing git repository').start();
     try {
       await execAsync('git init', { cwd: targetDir });
       gitInitialized = true;
-      printSuccess(`Initialized git repository`);
+      gitSpinner.stop('Initialized git repository');
     } catch {
-      printWarning(`Could not initialize git repository (is git installed?)`);
+      gitSpinner.fail('Could not initialize git repository');
     }
   }
 
   // 5. Dependency installation
   let depsInstalled = false;
   if (installDeps) {
-    printInfo(`Installing dependencies using ${c.bold}${pkgManager}${c.reset}...`);
+    const depSpinner = new Spinner(`Installing dependencies with ${pkgManager}`).start();
     try {
-      // Use .cmd extension on Windows when running npm/pnpm/yarn
       const isWin = process.platform === 'win32';
       const cmd = isWin && pkgManager !== 'bun' ? `${pkgManager}.cmd` : pkgManager;
       await execAsync(`${cmd} install`, { cwd: targetDir });
       depsInstalled = true;
-      printSuccess(`Dependencies installed successfully`);
+      depSpinner.stop(`Installed dependencies with ${c.bold}${pkgManager}${c.reset}`);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      printWarning(`Dependency installation skipped or failed: ${errMsg}`);
+      depSpinner.fail(`Dependency install skipped: ${errMsg}`);
     }
   }
 

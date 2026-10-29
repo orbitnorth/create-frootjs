@@ -20,7 +20,7 @@ import {
 import { TEMPLATES, TEMPLATE_LIST, getTemplate } from './templates/index.js';
 import { scaffoldProject } from './generator.js';
 
-const VERSION = '1.0.4';
+const VERSION = '1.0.5';
 
 interface ParsedArgs {
   targetDir?: string;
@@ -218,6 +218,7 @@ async function main(): Promise<void> {
   }
 
   // 5. Scaffold Project
+  const startTime = performance.now();
   try {
     const result = await scaffoldProject({
       targetDir: resolvedTarget,
@@ -228,12 +229,15 @@ async function main(): Promise<void> {
       installDeps: Boolean(installDeps),
     });
 
+    const durationMs = Math.round(performance.now() - startTime);
+
     // 6. Print stylized next steps card
     printNextSteps({
       projectDir: targetDir,
       pkgManager,
       hasInstalled: result.depsInstalled,
       port: 3000,
+      durationMs,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -1,6 +1,6 @@
 {
   "name": "create-frootjs",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Interactive CLI generator for scaffolding high-performance Froot applications",
   "type": "module",
   "bin": {
