@@ -20,7 +20,7 @@ import {
 import { TEMPLATES, TEMPLATE_LIST, getTemplate } from './templates/index.js';
 import { scaffoldProject } from './generator.js';
 
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 
 interface ParsedArgs {
   targetDir?: string;
