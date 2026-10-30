@@ -24,7 +24,7 @@ export const fullstackTemplate: TemplateDefinition = {
             start: 'node dist/server.js',
           },
           dependencies: {
-            'froot-fullstack': '^1.2.0',
+            'froot-fullstack': '^1.2.1',
             frootjs: '^1.0.6',
             preact: '^11.1.0',
             'preact-render-to-string': '^6.8.2',
