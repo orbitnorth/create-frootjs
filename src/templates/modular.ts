@@ -23,7 +23,7 @@ export const modularTemplate: TemplateDefinition = {
             test: 'node --test tests/*.test.ts',
           },
           dependencies: {
-            frootjs: '^1.0.5',
+            frootjs: '^1.0.6',
           },
           devDependencies: {
             '@types/node': '^22.10.0',

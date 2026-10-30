@@ -9,7 +9,7 @@ import { TemplateDefinition, TemplateFileMap, COMMON_GITIGNORE } from './types.j
 export const fullstackTemplate: TemplateDefinition = {
   id: 'fullstack',
   name: 'Fullstack (Next.js Alternative)',
-  description: 'Next.js alternative with Preact SSR, Tailwind v4, file-based routing, nested layouts & SSG',
+  description: 'Preact SSR & Tailwind v4',
   generate: (projectName: string): TemplateFileMap => {
     return {
       'package.json': JSON.stringify(
@@ -26,8 +26,8 @@ export const fullstackTemplate: TemplateDefinition = {
             start: 'node dist/server.js',
           },
           dependencies: {
-            'froot-fullstack': '^1.1.0',
-            frootjs: '^1.0.5',
+            'froot-fullstack': '^1.1.1',
+            frootjs: '^1.0.6',
             preact: '^11.1.0',
             'preact-render-to-string': '^6.8.2',
           },

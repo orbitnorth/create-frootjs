@@ -22,7 +22,7 @@ export const minimalTemplate: TemplateDefinition = {
             start: 'node dist/index.js',
           },
           dependencies: {
-            frootjs: '^1.0.5',
+            frootjs: '^1.0.6',
           },
           devDependencies: {
             '@types/node': '^22.10.0',

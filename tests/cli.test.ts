@@ -495,6 +495,13 @@ describe('create-frootjs Templates & Scaffolder', () => {
     assert.equal(agentExists, false);
   });
 
+  it('ensures all template options fit comfortably within standard 80-column terminal', () => {
+    for (const t of TEMPLATE_LIST) {
+      const fullLen = 4 + 2 + t.name.length + 2 + t.description.length;
+      assert.ok(fullLen <= 80, `Template ${t.id} (${fullLen} chars) should fit in 80 columns without wrapping`);
+    }
+  });
+
   it('outputs valid JSON schema when called with --schema', async () => {
     const { exec } = await import('node:child_process');
     const { promisify } = await import('node:util');

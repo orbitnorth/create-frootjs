@@ -242,11 +242,16 @@ export async function promptSelect<T = string>(
 
   stdout.write('\x1b[?25l'); // Hide cursor
 
-  const maxLabelLen = Math.max(...options.map((o) => o.label.length), 10);
+  const cols = stdout.columns && stdout.columns > 20 ? stdout.columns : 80;
+  const maxLabelLen = Math.min(
+    Math.max(...options.map((o) => o.label.length), 10),
+    35
+  );
+  const maxHintLen = Math.max(10, cols - maxLabelLen - 12);
 
   const render = (isInitial = false) => {
     if (!isInitial) {
-      stdout.write(`\x1b[${options.length}A\x1b[0J`);
+      stdout.write(`\r\x1b[${options.length}A`);
     }
 
     for (let i = 0; i < options.length; i++) {
@@ -257,13 +262,19 @@ export async function promptSelect<T = string>(
       const labelText = isSelected
         ? `${c.bold}${c.emerald}${paddedLabel}${c.reset}`
         : `${c.dim}${paddedLabel}${c.reset}`;
-      const hintText = opt.hint
-        ? isSelected
-          ? `${c.cyan}${opt.hint}${c.reset}`
-          : `${c.gray}${opt.hint}${c.reset}`
-        : '';
 
-      stdout.write(`    ${pointer} ${labelText}${hintText}\n`);
+      let hintText = '';
+      if (opt.hint) {
+        const rawHint =
+          opt.hint.length > maxHintLen
+            ? `${opt.hint.slice(0, maxHintLen - 3)}...`
+            : opt.hint;
+        hintText = isSelected
+          ? `${c.cyan}${rawHint}${c.reset}`
+          : `${c.gray}${rawHint}${c.reset}`;
+      }
+
+      stdout.write(`\r\x1b[2K    ${pointer} ${labelText}${hintText}\n`);
     }
   };
 
@@ -271,55 +282,109 @@ export async function promptSelect<T = string>(
   render(true);
 
   return new Promise<T>((resolve) => {
+    readline.emitKeypressEvents(stdin);
     const wasRaw = stdin.isRaw;
-    stdin.setRawMode(true);
+    if (stdin.isTTY) {
+      stdin.setRawMode(true);
+    }
     stdin.resume();
 
-    const onData = (data: Buffer) => {
-      const key = data.toString();
+    let done = false;
+
+    const cleanup = () => {
+      done = true;
+      stdin.removeListener('keypress', onKeypress);
+      stdin.removeListener('data', onRawData);
+      if (stdin.isTTY) {
+        stdin.setRawMode(wasRaw ?? false);
+      }
+      stdin.pause();
+      stdout.write('\x1b[?25h'); // Restore cursor
+    };
+
+    const confirmSelection = () => {
+      cleanup();
+      // Clear question line + all options, then write single confirmed checkmark
+      stdout.write(`\r\x1b[${options.length + 1}A\r\x1b[0J`);
+      console.log(`  ${c.green}✔${c.reset} ${c.bold}${question.replace(/:$/, '')}:${c.reset} ${c.emerald}${options[selectedIndex]!.label}${c.reset}`);
+      resolve(options[selectedIndex]!.value);
+    };
+
+    const onKeypress = (_str: string, key: readline.Key) => {
+      if (done || !key) return;
 
       // Ctrl+C
-      if (key === '\u0003') {
-        stdout.write('\x1b[?25h');
+      if (key.ctrl && key.name === 'c') {
+        cleanup();
         process.exit(130);
       }
 
       // Enter / Return
-      if (key === '\r' || key === '\n') {
-        stdin.removeListener('data', onData);
-        stdin.setRawMode(wasRaw ?? false);
-        stdin.pause();
-        stdout.write('\x1b[?25h');
-
-        // Collapse menu into compact confirmed answer
-        stdout.write(`\x1b[${options.length + 1}A\x1b[0J`);
-        console.log(`  ${c.green}✔${c.reset} ${c.bold}${question.replace(/:$/, '')}:${c.reset} ${c.emerald}${options[selectedIndex]!.label}${c.reset}`);
-        resolve(options[selectedIndex]!.value);
-        return;
-      }
-
-      // Numbers 1-9 direct jump
-      const num = parseInt(key, 10);
-      if (!isNaN(num) && num >= 1 && num <= options.length) {
-        selectedIndex = num - 1;
-        render();
+      if (key.name === 'return' || key.name === 'enter') {
+        confirmSelection();
         return;
       }
 
       // Up arrow or 'k'
-      if (key === '\u001b[A' || key === 'k') {
+      if (key.name === 'up' || key.name === 'k') {
         selectedIndex = (selectedIndex - 1 + options.length) % options.length;
         render();
+        return;
       }
 
       // Down arrow, 'j', or Tab
-      if (key === '\u001b[B' || key === 'j' || key === '\t') {
+      if (key.name === 'down' || key.name === 'j' || key.name === 'tab') {
         selectedIndex = (selectedIndex + 1) % options.length;
         render();
+        return;
+      }
+
+      // Numbers 1-9 direct jump
+      if (key.sequence && /^[1-9]$/.test(key.sequence)) {
+        const num = parseInt(key.sequence, 10);
+        if (num >= 1 && num <= options.length) {
+          selectedIndex = num - 1;
+          render();
+          return;
+        }
       }
     };
 
-    stdin.on('data', onData);
+    // Fallback in case readline keypress events aren't delivered
+    const onRawData = (data: Buffer) => {
+      if (done) return;
+      const str = data.toString();
+
+      if (str === '\u0003') {
+        cleanup();
+        process.exit(130);
+      }
+      if (str === '\r' || str === '\n') {
+        confirmSelection();
+        return;
+      }
+      if (str === '\u001b[A' || str === '\u001bOA') {
+        selectedIndex = (selectedIndex - 1 + options.length) % options.length;
+        render();
+        return;
+      }
+      if (str === '\u001b[B' || str === '\u001bOB') {
+        selectedIndex = (selectedIndex + 1) % options.length;
+        render();
+        return;
+      }
+      if (/^[1-9]$/.test(str)) {
+        const num = parseInt(str, 10);
+        if (num >= 1 && num <= options.length) {
+          selectedIndex = num - 1;
+          render();
+        }
+      }
+    };
+
+    stdin.on('keypress', onKeypress);
+    // Raw listener only if keypress is not firing
+    stdin.on('data', onRawData);
   });
 }
 

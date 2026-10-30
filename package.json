@@ -1,6 +1,6 @@
 {
   "name": "create-frootjs",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Interactive CLI generator for scaffolding high-performance Froot applications",
   "type": "module",
   "bin": {
@@ -45,7 +45,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "frootjs": "link:E:/Business/MetaTools/froot/froot-framework",
+    "frootjs": "^1.0.6",
     "typescript": "^5.8.0"
   }
 }
