@@ -18,15 +18,13 @@ export const fullstackTemplate: TemplateDefinition = {
           version: '1.0.0',
           type: 'module',
           scripts: {
-            'dev:css': 'tailwindcss -i src/styles.css -o dist/styles.css --watch',
-            'build:css': 'tailwindcss -i src/styles.css -o dist/styles.css --minify',
-            dev: 'pnpm run build:css && tsx watch src/server.tsx',
-            build: 'pnpm run build:css && tsc',
-            'build:static': 'pnpm run build:css && tsx src/build.ts',
+            dev: 'tsx watch src/server.tsx',
+            build: 'tsc && tsx src/build.ts',
+            'build:static': 'tsx src/build.ts',
             start: 'node dist/server.js',
           },
           dependencies: {
-            'froot-fullstack': '^1.1.1',
+            'froot-fullstack': '^1.2.0',
             frootjs: '^1.0.6',
             preact: '^11.1.0',
             'preact-render-to-string': '^6.8.2',
@@ -405,9 +403,11 @@ const __dirname = path.dirname(__filename);
 export const app = new Froot();
 export const router = createAppRouter(app);
 
-// 1. Serve compiled Tailwind v4 CSS
-const cssPath = path.resolve(__dirname, '../dist/styles.css');
-router.serveCss(cssPath);
+// 1. Enable built-in Tailwind CSS v4 pipeline (watches in dev, serves /styles.css)
+await router.enableTailwind({
+  input: path.resolve(__dirname, 'styles.css'),
+  output: path.resolve(__dirname, '../dist/styles.css'),
+});
 
 // 2. Discover file-based routes and nested layouts in src/app
 const appDir = path.resolve(__dirname, 'app');

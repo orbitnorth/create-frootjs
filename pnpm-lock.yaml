@@ -12,8 +12,8 @@ importers:
         specifier: ^22.10.0
         version: 22.20.5
       frootjs:
-        specifier: link:E:/Business/MetaTools/froot/froot-framework
-        version: link:../froot-framework
+        specifier: ^1.0.6
+        version: 1.0.6
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
@@ -22,6 +22,17 @@ packages:
 
   '@types/node@22.20.5':
     resolution: {integrity: sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA==}
+
+  frootjs@1.0.6:
+    resolution: {integrity: sha512-PcOprpQiITJtJnFdwy7H3eb+oLyVCxnOL7Xb1ATKJEWGulri2atkPtERwlggYRxSTzAfSm/dB7bJDBDBYuFcDA==}
+    peerDependencies:
+      preact: '>=10.0.0'
+      preact-render-to-string: '>=6.0.0'
+    peerDependenciesMeta:
+      preact:
+        optional: true
+      preact-render-to-string:
+        optional: true
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -36,6 +47,8 @@ snapshots:
   '@types/node@22.20.5':
     dependencies:
       undici-types: 6.21.0
+
+  frootjs@1.0.6: {}
 
   typescript@5.9.3: {}
 
