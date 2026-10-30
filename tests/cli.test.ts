@@ -21,18 +21,17 @@ describe('create-frootjs Templates & Scaffolder', () => {
     }
   });
 
-  it('provides all 7 required architectural templates', () => {
+  it('provides all 6 required architectural templates', () => {
     const expectedTemplates = [
       'mvc',
       'modular',
       'streaming',
       'websocket',
       'openapi',
-      'fullstack',
       'minimal',
     ];
 
-    assert.equal(TEMPLATE_LIST.length, 7);
+    assert.equal(TEMPLATE_LIST.length, 6);
     for (const id of expectedTemplates) {
       const t = getTemplate(id);
       assert.ok(t, `Template ${id} must be registered`);
@@ -154,47 +153,6 @@ describe('create-frootjs Templates & Scaffolder', () => {
 
     const serverFile = await fs.readFile(path.join(targetDir, 'src/server.ts'), 'utf8');
     assert.ok(serverFile.includes('app.openapi'));
-  });
-
-  it('scaffolds fullstack Next.js-alternative template onto disk with froot-fullstack', async () => {
-    const targetDir = path.join(tempBaseDir, 'test-fullstack');
-    const template = getTemplate('fullstack')!;
-
-    const result = await scaffoldProject({
-      targetDir,
-      projectName: 'test-fullstack',
-      template,
-      pkgManager: 'pnpm',
-      gitInit: false,
-      installDeps: false,
-    });
-
-    const rootLayout = await fs.stat(path.join(targetDir, 'src/app/layout.tsx'));
-    assert.ok(rootLayout.isFile());
-
-    const docsLayout = await fs.stat(path.join(targetDir, 'src/app/docs/layout.tsx'));
-    assert.ok(docsLayout.isFile());
-
-    const homePage = await fs.stat(path.join(targetDir, 'src/app/page.tsx'));
-    assert.ok(homePage.isFile());
-
-    const docsSlugPage = await fs.stat(path.join(targetDir, 'src/app/docs/[slug]/page.tsx'));
-    assert.ok(docsSlugPage.isFile());
-
-    const stylesCss = await fs.stat(path.join(targetDir, 'src/styles.css'));
-    assert.ok(stylesCss.isFile());
-    const cssContent = await fs.readFile(path.join(targetDir, 'src/styles.css'), 'utf8');
-    assert.ok(cssContent.includes('@import "tailwindcss";'));
-    assert.ok(cssContent.includes('@theme'));
-    assert.ok(docsLayout.isFile());
-
-    const pkgJson = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
-    assert.ok(pkgJson.dependencies['froot-fullstack']);
-    assert.ok(pkgJson.dependencies['preact']);
-    assert.ok(pkgJson.devDependencies['@tailwindcss/cli']);
-    assert.ok(pkgJson.devDependencies['tailwindcss']);
-    assert.ok(pkgJson.scripts['build:css']);
-    assert.ok(pkgJson.scripts['dev:css']);
   });
 
   it('scaffolds minimal template onto disk', async () => {
@@ -513,7 +471,7 @@ describe('create-frootjs Templates & Scaffolder', () => {
 
     assert.equal(schema.name, 'create-frootjs');
     assert.ok(Array.isArray(schema.templates));
-    assert.equal(schema.templates.length, 7);
+    assert.equal(schema.templates.length, 6);
     assert.ok(schema.options.template);
     assert.ok(schema.options.database);
     assert.ok(schema.recipes.enterpriseApi);

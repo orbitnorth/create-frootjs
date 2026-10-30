@@ -117,7 +117,6 @@ function printUsage(): void {
                              • streaming    SSE & token streaming
                              • websocket    Real-time pub/sub rooms
                              • openapi      REST API & Scalar docs
-                             • fullstack    Next.js alternative (Preact SSR & layouts)
                              • minimal      Lean single-file starter
     --pm <manager>           Package manager: pnpm | npm | yarn | bun
     --db <orm>               Database ORM: none | drizzle | prisma
@@ -150,7 +149,7 @@ function printAgentSchema(): void {
     options: {
       template: {
         flag: '-t, --template <name>',
-        choices: ['mvc', 'modular', 'streaming', 'websocket', 'openapi', 'fullstack', 'minimal'],
+        choices: ['mvc', 'modular', 'streaming', 'websocket', 'openapi', 'minimal'],
         default: 'mvc',
         description: 'Architectural pattern of the scaffolded application',
       },
@@ -197,7 +196,6 @@ function printAgentSchema(): void {
       restApiScalarDocs: 'npm create frootjs my-app -t openapi --db prisma --linter eslint --test node -y',
       realtimeWebSocket: 'npm create frootjs my-app -t websocket --linter biome --test vitest -y',
       aiStreamingSSE: 'npm create frootjs my-app -t streaming --linter biome --test vitest -y',
-      fullstackJsx: 'npm create frootjs my-app -t fullstack --linter biome --test vitest -y',
       minimalStarter: 'npm create frootjs my-app -t minimal --docker --test vitest -y',
     },
   };

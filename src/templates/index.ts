@@ -9,7 +9,6 @@ import { modularTemplate } from './modular.js';
 import { streamingTemplate } from './streaming.js';
 import { websocketTemplate } from './websocket.js';
 import { openapiTemplate } from './openapi.js';
-import { fullstackTemplate } from './fullstack.js';
 import { minimalTemplate } from './minimal.js';
 
 export * from './types.js';
@@ -20,7 +19,6 @@ export const TEMPLATES: Record<string, TemplateDefinition> = {
   streaming: streamingTemplate,
   websocket: websocketTemplate,
   openapi: openapiTemplate,
-  fullstack: fullstackTemplate,
   minimal: minimalTemplate,
 };
 
