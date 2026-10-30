@@ -18,13 +18,12 @@ export const fullstackTemplate: TemplateDefinition = {
           version: '1.0.0',
           type: 'module',
           scripts: {
-            dev: 'tsx watch src/server.tsx',
-            build: 'tsc && tsx src/build.ts',
-            'build:static': 'tsx src/build.ts',
-            start: 'node dist/server.js',
+            dev: 'froot-fullstack dev',
+            build: 'froot-fullstack build',
+            start: 'froot-fullstack start',
           },
           dependencies: {
-            'froot-fullstack': '^1.2.1',
+            'froot-fullstack': '^1.2.2',
             frootjs: '^1.0.6',
             preact: '^11.1.0',
             'preact-render-to-string': '^6.8.2',
@@ -329,8 +328,7 @@ export const metadata = {
 };
 
 export default async function DocsOverviewPage() {
-  const docPath = path.resolve(process.cwd(), 'content/docs/overview.md');
-  const { frontmatter, html } = await renderMarkdownFile(docPath);
+  const { frontmatter, html } = await getDoc('overview');
 
   return (
     <div>
@@ -349,12 +347,7 @@ export default async function DocsOverviewPage() {
 }
 `,
 
-      'src/app/docs/[slug]/page.tsx': `import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { renderMarkdownFile } from 'froot-fullstack';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+      'src/app/docs/[slug]/page.tsx': `import { getDoc } from 'froot-fullstack';
 
 export async function generateStaticParams() {
   return [
@@ -372,8 +365,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function DocSlugPage({ params }: { params: { slug: string } }) {
   const slug = params.slug || 'overview';
-  const docPath = path.resolve(process.cwd(), 'content/docs', \`\${slug}.md\`);
-  const { frontmatter, html } = await renderMarkdownFile(docPath);
+  const { frontmatter, html } = await getDoc(slug);
 
   return (
     <div>
@@ -390,61 +382,6 @@ export default async function DocSlugPage({ params }: { params: { slug: string }
     </div>
   );
 }
-`,
-
-      'src/server.tsx': `import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { Froot } from 'frootjs';
-import { createAppRouter } from 'froot-fullstack';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export const app = new Froot();
-export const router = createAppRouter(app);
-
-// 1. Enable built-in Tailwind CSS v4 pipeline (watches in dev, serves /styles.css)
-await router.enableTailwind({
-  input: path.resolve(__dirname, 'styles.css'),
-  output: path.resolve(__dirname, '../dist/styles.css'),
-});
-
-// 2. Discover file-based routes and nested layouts in src/app
-const appDir = path.resolve(__dirname, 'app');
-await router.discover(appDir);
-
-const PORT = Number(process.env['PORT'] || 3000);
-const isDirectEntry = process.argv[1] ? path.basename(process.argv[1]).includes('server') : false;
-if (isDirectEntry && process.env['NODE_ENV'] !== 'test') {
-  app.listen(PORT, () => {
-    console.log(\`🍏 Froot Fullstack server running at http://localhost:\${PORT}\`);
-  });
-}
-`,
-
-      'src/build.ts': `/**
- * Static Site Generation (SSG) Builder
- */
-process.env['FROOT_BUILD'] = 'true';
-
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { router } from './server.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const outDir = path.resolve(__dirname, '../dist/static');
-
-async function build() {
-  console.log('🍏 Building static site with froot-fullstack...');
-  const result = await router.exportStatic({ outDir });
-  console.log(\`✅ Export complete in \${result.durationMs}ms: \${result.renderedRoutes.length} routes pre-rendered.\`);
-}
-
-build().catch((err) => {
-  console.error('❌ Build failed:', err);
-  process.exit(1);
-});
 `,
     };
   },
