@@ -28,8 +28,7 @@ export function applyDatabaseAddon(
 
   if (dbOption === 'drizzle') {
     pkg.dependencies['drizzle-orm'] = '^0.39.0';
-    pkg.dependencies['better-sqlite3'] = '^11.8.0';
-    pkg.devDependencies['@types/better-sqlite3'] = '^7.6.12';
+    pkg.dependencies['@libsql/client'] = '^0.14.0';
     pkg.devDependencies['drizzle-kit'] = '^0.30.0';
 
     pkg.scripts['db:push'] = 'drizzle-kit push';
@@ -42,7 +41,7 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
-    url: 'sqlite.db',
+    url: 'file:sqlite.db',
   },
 });
 `;
@@ -60,12 +59,15 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 `;
 
-    files['src/db/index.ts'] = `import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+    files['src/db/index.ts'] = `import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from './schema.js';
 
-const sqlite = new Database('sqlite.db');
-export const db = drizzle(sqlite, { schema });
+const client = createClient({
+  url: process.env.DATABASE_URL || 'file:sqlite.db',
+});
+
+export const db = drizzle(client, { schema });
 export * from './schema.js';
 `;
   } else if (dbOption === 'prisma') {

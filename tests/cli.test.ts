@@ -234,7 +234,7 @@ describe('create-frootjs Templates & Scaffolder', () => {
 
     const pkg = JSON.parse(await fs.readFile(path.join(targetDir, 'package.json'), 'utf8'));
     assert.ok(pkg.dependencies['drizzle-orm']);
-    assert.ok(pkg.dependencies['better-sqlite3']);
+    assert.ok(pkg.dependencies['@libsql/client']);
     assert.ok(pkg.scripts['db:push']);
   });
 
