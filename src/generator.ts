@@ -118,7 +118,7 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<Scaffol
   // 5. Dependency installation
   let depsInstalled = false;
   if (installDeps) {
-    const depSpinner = new Spinner(`Installing dependencies with ${pkgManager}`).start();
+    const depSpinner = new Spinner(`Installing dependencies with ${pkgManager}`, true).start();
     try {
       const isWin = process.platform === 'win32';
       const cmd = isWin && pkgManager !== 'bun' ? `${pkgManager}.cmd` : pkgManager;
